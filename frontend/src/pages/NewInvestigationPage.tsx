@@ -7,6 +7,7 @@ import { Search, Globe, AlertCircle, Loader2, ArrowRight, Phone, CheckCircle2, K
 
 const COUNTRIES = [
   { code: 'IN', name: 'India (+91)' },
+  { code: 'NP', name: 'Nepal (+977)' },
   { code: 'US', name: 'United States (+1)' },
   { code: 'GB', name: 'United Kingdom (+44)' },
   { code: 'AE', name: 'United Arab Emirates (+971)' },

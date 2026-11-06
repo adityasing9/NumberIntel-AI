@@ -88,7 +88,7 @@ class FreeInternetOSINTProvider(BaseIntelligenceProvider):
                                         discovered_business = candidate
 
                             # Carrier Mentions
-                            for c in ["Bharti Airtel", "Vodafone Idea", "Reliance Jio", "BSNL", "MTNL", "Verizon", "AT&T", "T-Mobile"]:
+                            for c in ["Bharti Airtel", "Vodafone Idea", "Reliance Jio", "BSNL", "MTNL", "Nepal Telecom", "Ncell", "Smart Telecom", "Verizon", "AT&T", "T-Mobile"]:
                                 if c.lower() in combined and not discovered_carrier:
                                     discovered_carrier = c
 
@@ -111,7 +111,7 @@ class FreeInternetOSINTProvider(BaseIntelligenceProvider):
                             t_entity = m.group(1).strip()
                             t_score = int(m.group(2).strip())
                             if t_entity not in ["SMS Service", "unknown"]:
-                                if any(x in t_entity for x in ["Airtel", "Vodafone", "Jio", "BSNL"]):
+                                if any(x in t_entity for x in ["Airtel", "Vodafone", "Jio", "BSNL", "Nepal Telecom", "Ncell", "Smart"]):
                                     if not discovered_carrier:
                                         discovered_carrier = t_entity
                                 else:

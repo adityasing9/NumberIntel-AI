@@ -361,13 +361,14 @@ export const numberService = {
     } catch (err) {}
 
     const parsed = parseLocalPhones(phoneNumber, defaultCountry);
+    const defaultCalling = defaultCountry === 'IN' ? '91' : defaultCountry === 'NP' ? '977' : '1';
     const validNum = parsed.valid_samples[0] || {
       raw_input: phoneNumber,
-      e164_format: phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber.replace(/\D/g, '')}`,
+      e164_format: phoneNumber.startsWith('+') ? phoneNumber : `+${defaultCalling}${phoneNumber.replace(/\D/g, '')}`,
       country_iso2: defaultCountry,
-      country_code: defaultCountry === 'IN' ? '91' : '1',
+      country_code: defaultCalling,
       number_type: 'mobile',
-      carrier_name: 'Bharti Airtel',
+      carrier_name: defaultCountry === 'NP' ? 'Nepal Telecom' : 'Bharti Airtel',
     };
 
     const taskId = `task-single-${Date.now()}`;

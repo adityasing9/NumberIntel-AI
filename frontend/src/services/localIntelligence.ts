@@ -489,6 +489,97 @@ export function resolveCarrier(e164: string, countryIso: string): { carrier: str
     };
   }
 
+  // 5. Nepal (+977)
+  if (countryIso === 'NP' || e164.startsWith('+977')) {
+    const digits10 = digits.slice(-10);
+    const prefix3 = digits10.slice(0, 3);
+    const prefix2 = digits10.slice(0, 2);
+
+    // Nepal Telecom (NTC / Namaste): 984, 985, 986, 974, 975
+    if (['984', '985', '986', '974', '975'].includes(prefix3)) {
+      return {
+        carrier: 'Nepal Telecom (NTC / Namaste)',
+        circle: prefix3 === '985' ? 'Nepal Postpaid Grid' : 'Nepal Mobile Grid (GSM/4G/5G)',
+        lineType: 'Mobile (Cellular Line)'
+      };
+    }
+
+    // Ncell Axiata: 980, 981, 982, 970
+    if (['980', '981', '982', '970'].includes(prefix3)) {
+      return {
+        carrier: 'Ncell Axiata',
+        circle: 'Nepal Cellular Grid (Ncell)',
+        lineType: 'Mobile (Cellular Line)'
+      };
+    }
+
+    // Smart Telecom (SmartCell): 961, 962, 988
+    if (['961', '962', '988'].includes(prefix3)) {
+      return {
+        carrier: 'Smart Telecom (SmartCell)',
+        circle: 'Nepal Mobile Grid',
+        lineType: 'Mobile (Cellular Line)'
+      };
+    }
+
+    // Fixed PSTN Lines
+    if (prefix2 === '01' || prefix2 === '1') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Bagmati Province (Kathmandu Valley - Kathmandu, Lalitpur, Bhaktapur)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+    if (prefix3 === '061' || prefix2 === '61') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Gandaki Province (Pokhara / Kaski)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+    if (prefix3 === '071' || prefix2 === '71') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Lumbini Province (Butwal, Bhairahawa / Rupandehi)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+    if (prefix3 === '021' || prefix2 === '21') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Koshi Province (Biratnagar / Morang)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+    if (prefix3 === '051' || prefix2 === '51') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Madhesh Province (Birgunj / Parsa)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+    if (prefix3 === '091' || prefix2 === '91') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Sudurpashchim Province (Dhangadhi / Kailali)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+    if (prefix3 === '087' || prefix2 === '87') {
+      return {
+        carrier: 'Nepal Telecom (Fixed PSTN)',
+        circle: 'Karnali Province (Surkhet)',
+        lineType: 'Fixed Line PSTN'
+      };
+    }
+
+    return {
+      carrier: 'Nepal Telecom / Ncell Axiata',
+      circle: 'Federal Democratic Republic of Nepal Grid',
+      lineType: 'Mobile / Cellular Line'
+    };
+  }
+
   return {
     carrier: 'Allocated International Telecom Carrier',
     circle: `${countryIso} Numbering Region`,
@@ -987,7 +1078,7 @@ export const parseLocalPhones = (rawText: string, defaultCountry = 'IN'): Prefli
           is_valid: true,
           carrier_name: carrierInfo.carrier,
           line_type: carrierInfo.lineType,
-          timezones: country === 'IN' ? ['Asia/Calcutta'] : ['UTC']
+          timezones: country === 'IN' ? ['Asia/Calcutta'] : country === 'NP' ? ['Asia/Kathmandu'] : ['UTC']
         });
         continue;
       }
@@ -998,7 +1089,8 @@ export const parseLocalPhones = (rawText: string, defaultCountry = 'IN'): Prefli
     // Secondary fallback check
     const digits = raw.replace(/\D/g, '');
     if (digits.length >= 10 && digits.length <= 15) {
-      const e164 = raw.startsWith('+') ? raw.replace(/\s+/g, '') : `+${defaultCountry === 'IN' ? '91' : '1'}${digits}`;
+      const defaultCallingCode = defaultCountry === 'IN' ? '91' : defaultCountry === 'NP' ? '977' : '1';
+      const e164 = raw.startsWith('+') ? raw.replace(/\s+/g, '') : `+${defaultCallingCode}${digits}`;
       if (seen.has(e164)) {
         duplicates++;
         continue;
@@ -1010,13 +1102,13 @@ export const parseLocalPhones = (rawText: string, defaultCountry = 'IN'): Prefli
         raw_input: raw,
         e164_format: e164,
         national_format: digits,
-        country_code: defaultCountry === 'IN' ? '91' : '1',
+        country_code: defaultCallingCode,
         country_iso2: defaultCountry,
         number_type: digits.startsWith('1800') ? 'toll_free' : 'mobile',
         is_valid: true,
         carrier_name: carrierInfo.carrier,
         line_type: carrierInfo.lineType,
-        timezones: ['Asia/Calcutta']
+        timezones: defaultCountry === 'IN' ? ['Asia/Calcutta'] : defaultCountry === 'NP' ? ['Asia/Kathmandu'] : ['UTC']
       });
     } else {
       invalid.push(raw);

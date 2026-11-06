@@ -28,7 +28,7 @@ export const freeOsintService = {
     const cleanDigits = phone.replace(/\D/g, '');
     const tenDigits = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
     const country = countryCode.toUpperCase();
-    const dialingCode = country === 'IN' ? '91' : country === 'US' ? '1' : country === 'GB' ? '44' : '91';
+    const dialingCode = country === 'IN' ? '91' : country === 'NP' ? '977' : country === 'US' ? '1' : country === 'GB' ? '44' : '91';
     const e164 = `+${dialingCode}${tenDigits}`;
 
     // 1. Try Vercel Serverless Function `/api/free-osint`

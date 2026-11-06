@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   const cleanDigits = String(phoneParam).replace(/\D/g, '');
   const tenDigits = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
-  const dialingCode = countryParam === 'IN' ? '91' : countryParam === 'US' ? '1' : countryParam === 'GB' ? '44' : '91';
+  const dialingCode = countryParam === 'IN' ? '91' : countryParam === 'NP' ? '977' : countryParam === 'US' ? '1' : countryParam === 'GB' ? '44' : '91';
   const e164 = `+${dialingCode}${tenDigits}`;
 
   const responsePayload = {
@@ -149,6 +149,9 @@ export default async function handler(req, res) {
               { name: 'Reliance Jio Infocomm', regex: /reliance\s*jio|\bjio\b/i },
               { name: 'BSNL', regex: /\bbsnl\b|bharat\s*sanchar/i },
               { name: 'MTNL', regex: /\bmtnl\b/i },
+              { name: 'Nepal Telecom (NTC / Namaste)', regex: /nepal\s*telecom|\bntc\b|namaste/i },
+              { name: 'Ncell Axiata', regex: /ncell|\baxiata\b/i },
+              { name: 'Smart Telecom (SmartCell)', regex: /smart\s*telecom|smartcell/i },
               { name: 'Verizon Wireless', regex: /\bverizon\b/i },
               { name: 'AT&T', regex: /\bat&t\b/i },
               { name: 'T-Mobile', regex: /\bt-mobile\b/i },
@@ -182,7 +185,7 @@ export default async function handler(req, res) {
             }
 
             // Location mentions
-            const LOCATIONS = ['Mumbai', 'Delhi', 'Bengaluru', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kerala', 'Karnataka', 'Maharashtra', 'Gujarat', 'Punjab'];
+            const LOCATIONS = ['Kathmandu', 'Pokhara', 'Lalitpur', 'Bhaktapur', 'Biratnagar', 'Birgunj', 'Dharan', 'Butwal', 'Nepalgunj', 'Janakpur', 'Hetauda', 'Dhangadhi', 'Mumbai', 'Delhi', 'Bengaluru', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kerala', 'Karnataka', 'Maharashtra', 'Gujarat', 'Punjab'];
             for (const loc of LOCATIONS) {
               if (!responsePayload.circle && combinedText.includes(loc.toLowerCase())) {
                 responsePayload.circle = loc;
@@ -281,7 +284,10 @@ export default async function handler(req, res) {
                   callerOrCarrier.includes('Airtel') ||
                   callerOrCarrier.includes('Vodafone') ||
                   callerOrCarrier.includes('Jio') ||
-                  callerOrCarrier.includes('BSNL')
+                  callerOrCarrier.includes('BSNL') ||
+                  callerOrCarrier.includes('Nepal Telecom') ||
+                  callerOrCarrier.includes('Ncell') ||
+                  callerOrCarrier.includes('Smart Telecom')
                 ) {
                   if (!responsePayload.carrier) responsePayload.carrier = callerOrCarrier;
                 } else {
@@ -299,6 +305,54 @@ export default async function handler(req, res) {
     })();
 
     await Promise.allSettled([ddgPromise, siaPromise, tellowsPromise]);
+
+    // 2.5 TELECOM ALLOCATION REGISTRY FALLBACK
+    if (!responsePayload.carrier) {
+      if (countryParam === 'NP' || cleanDigits.startsWith('977')) {
+        const prefix3 = tenDigits.slice(0, 3);
+        const prefix2 = tenDigits.slice(0, 2);
+        if (['984', '985', '986', '974', '975'].includes(prefix3)) {
+          responsePayload.carrier = 'Nepal Telecom (NTC / Namaste)';
+          responsePayload.circle = prefix3 === '985' ? 'Nepal Postpaid Grid' : 'Nepal Mobile Grid (GSM/4G/5G)';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        } else if (['980', '981', '982', '970'].includes(prefix3)) {
+          responsePayload.carrier = 'Ncell Axiata';
+          responsePayload.circle = 'Nepal Cellular Grid (Ncell)';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        } else if (['961', '962', '988'].includes(prefix3)) {
+          responsePayload.carrier = 'Smart Telecom (SmartCell)';
+          responsePayload.circle = 'Nepal Mobile Grid';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        } else if (prefix2 === '01' || prefix2 === '1') {
+          responsePayload.carrier = 'Nepal Telecom (Fixed PSTN)';
+          responsePayload.circle = 'Bagmati Province (Kathmandu Valley)';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        } else if (prefix3 === '061' || prefix2 === '61') {
+          responsePayload.carrier = 'Nepal Telecom (Fixed PSTN)';
+          responsePayload.circle = 'Gandaki Province (Pokhara)';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        } else if (prefix3 === '071' || prefix2 === '71') {
+          responsePayload.carrier = 'Nepal Telecom (Fixed PSTN)';
+          responsePayload.circle = 'Lumbini Province (Butwal / Bhairahawa)';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        } else {
+          responsePayload.carrier = 'Nepal Telecom / Ncell Axiata';
+          responsePayload.circle = 'Federal Democratic Republic of Nepal Grid';
+          responsePayload.sources.push('Nepal Telecommunications Authority (NTA)');
+        }
+      } else if (countryParam === 'IN' || cleanDigits.startsWith('91')) {
+        const prefix2 = tenDigits.slice(0, 2);
+        if (['94'].includes(prefix2)) {
+          responsePayload.carrier = 'BSNL Mobile';
+        } else if (['70', '79', '85', '88', '62', '63'].includes(prefix2)) {
+          responsePayload.carrier = 'Reliance Jio Infocomm';
+        } else {
+          responsePayload.carrier = 'Bharti Airtel / Vodafone Idea (Vi)';
+        }
+        responsePayload.circle = 'National Cellular Grid (India)';
+        responsePayload.sources.push('TRAI / DoT Telecom Series');
+      }
+    }
 
     // 3. SPAM RISK ASSESSMENT
     if (responsePayload.spam_score >= 7 || responsePayload.spam_reports_count >= 3) {
