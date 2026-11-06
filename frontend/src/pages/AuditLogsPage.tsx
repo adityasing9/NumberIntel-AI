@@ -34,8 +34,8 @@ export const AuditLogsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[var(--border-glass)]">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-2">
             <ShieldCheck className="w-6 h-6 text-cyan-400" />
@@ -47,17 +47,17 @@ export const AuditLogsPage: React.FC = () => {
         </div>
         <button
           onClick={fetchLogs}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-cyan-400 transition-colors"
+          className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl glass-button text-xs font-mono text-slate-300 hover:text-cyan-400 transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Refresh Logs</span>
         </button>
       </div>
 
-      <div className="bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+      <div className="glass-panel overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+            <thead className="bg-slate-950/60 text-slate-400 border-b border-[var(--border-glass)] uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="p-3.5">Action Event</th>
                 <th className="p-3.5">Resource</th>
@@ -66,7 +66,7 @@ export const AuditLogsPage: React.FC = () => {
                 <th className="p-3.5">Timestamp</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
+            <tbody className="divide-y divide-[var(--border-glass)] text-slate-300">
               {loading ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-cyan-400 font-mono">
@@ -81,11 +81,11 @@ export const AuditLogsPage: React.FC = () => {
                 </tr>
               ) : (
                 logs.map((l) => (
-                  <tr key={l.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={l.id} className="hover:bg-cyan-500/5 transition-colors">
                     <td className="p-3.5">
                       <span className="font-bold text-cyan-400 uppercase tracking-wider">{l.action}</span>
                     </td>
-                    <td className="p-3.5 text-slate-300 capitalize">{l.resource_type}</td>
+                    <td className="p-3.5 text-slate-200 capitalize">{l.resource_type}</td>
                     <td className="p-3.5 text-slate-400">{l.ip_address || 'Internal/Loopback'}</td>
                     <td className="p-3.5 text-slate-400 font-mono text-[11px] truncate max-w-xs">
                       {JSON.stringify(l.details || {})}

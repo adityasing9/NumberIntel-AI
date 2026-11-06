@@ -12,14 +12,14 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
 
   const getPlatformIcon = (name: string) => {
     return (
-      <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs uppercase text-cyan-400">
+      <div className="w-8 h-8 rounded-xl glass-card flex items-center justify-center font-bold text-xs uppercase text-cyan-400 shadow-inner">
         {name.slice(0, 2)}
       </div>
     );
   };
 
   return (
-    <div className="bg-slate-900/90 rounded-xl border border-slate-800 p-4 hover:border-slate-700 transition-all shadow-sm">
+    <div className="glass-card-interactive p-4 transition-all">
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           {getPlatformIcon(platform.platform_name)}
@@ -36,10 +36,10 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
       </div>
 
       {/* Profile info or not verifiable explanation */}
-      <div className="mt-3 pt-3 border-t border-slate-800/80">
+      <div className="mt-3 pt-3 border-t border-[var(--border-glass)]">
         {platform.profile_url ? (
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400 truncate max-w-[200px]">
+            <span className="text-slate-300 truncate max-w-[200px]">
               {platform.public_display_name || platform.public_username || platform.profile_url}
             </span>
             <a
@@ -67,7 +67,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
           <span>Confidence</span>
           <span className="text-slate-200">{platform.confidence_level.toFixed(0)}%</span>
         </div>
-        <div className="w-full bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
+        <div className="w-full bg-slate-950/60 rounded-full h-1.5 mt-1 overflow-hidden border border-[var(--border-glass)]">
           <div
             className={`h-full rounded-full ${
               platform.confidence_level >= 75
@@ -92,10 +92,10 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
               {showEvidence ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
             {showEvidence && (
-              <div className="mt-2 space-y-1.5 p-2 bg-slate-950/70 rounded-lg border border-slate-800 text-[11px] font-mono">
+              <div className="mt-2 space-y-1.5 p-2.5 glass-card rounded-xl text-[11px] font-mono">
                 {platform.evidence_records.map((ev) => (
                   <div key={ev.id} className="text-slate-300">
-                    <div className="text-cyan-400/80 font-semibold">{ev.evidence_type}</div>
+                    <div className="text-cyan-400 font-semibold">{ev.evidence_type}</div>
                     <div className="text-slate-400 text-[10px] break-words">{ev.snippet}</div>
                   </div>
                 ))}

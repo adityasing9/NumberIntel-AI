@@ -101,13 +101,13 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
       onClick={onClose}
     >
       <div
-        className="relative max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-5"
+        className="glass-panel relative max-w-md w-full shadow-2xl p-6 space-y-5 border-blue-500/40"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--border-glass)]">
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 bg-blue-950/80 rounded-xl border border-blue-700/60 text-blue-400">
+            <div className="p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-900/40">
               <Phone className="w-5 h-5" />
             </div>
             <div>
@@ -117,7 +117,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -125,7 +125,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
 
         {/* Status Banner */}
         {currentToken ? (
-          <div className="p-3.5 bg-emerald-950/70 border border-emerald-800/80 rounded-xl text-xs font-mono space-y-2">
+          <div className="p-3.5 glass-card border-emerald-500/50 rounded-xl text-xs font-mono space-y-2">
             <div className="flex items-center justify-between text-emerald-300 font-bold">
               <span className="flex items-center space-x-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -147,21 +147,21 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
             </div>
           </div>
         ) : (
-          <div className="p-3 bg-blue-950/40 border border-blue-900/50 rounded-xl text-[11px] font-mono text-slate-300">
+          <div className="p-3 glass-card border-blue-500/40 rounded-xl text-[11px] font-mono text-slate-300">
             Connect Truecaller to fetch caller names, carrier networks, and user avatar photos for any phone number.
           </div>
         )}
 
         {/* Feedback Messages */}
         {errorMsg && (
-          <div className="p-3 bg-rose-950/80 border border-rose-800 rounded-xl text-rose-300 text-xs flex items-center space-x-2 font-mono">
+          <div className="p-3 glass-card border-rose-500/60 rounded-xl text-rose-300 text-xs flex items-center space-x-2 font-mono">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-emerald-300 text-xs flex items-center space-x-2 font-mono">
+          <div className="p-3 glass-card border-emerald-500/60 rounded-xl text-emerald-300 text-xs flex items-center space-x-2 font-mono">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
             <span>{successMsg}</span>
           </div>
@@ -170,19 +170,19 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
         {/* Tabs */}
         {!currentToken && (
           <div className="space-y-4">
-            <div className="flex rounded-lg bg-slate-950 p-1 border border-slate-800 text-xs font-mono">
+            <div className="flex rounded-xl glass-card p-1 text-xs font-mono">
               <button
                 onClick={() => setActiveTab('otp')}
-                className={`flex-1 py-1.5 rounded-md transition-colors ${
-                  activeTab === 'otp' ? 'bg-cyan-600 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
+                  activeTab === 'otp' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 SMS OTP Login
               </button>
               <button
                 onClick={() => setActiveTab('manual')}
-                className={`flex-1 py-1.5 rounded-md transition-colors ${
-                  activeTab === 'manual' ? 'bg-cyan-600 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+                className={`flex-1 py-1.5 rounded-lg transition-colors ${
+                  activeTab === 'manual' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Paste Installation ID
@@ -204,7 +204,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
                         placeholder="e.g. +91 9876543210"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                        className="w-full glass-input rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                       />
                     </div>
                     <button
@@ -229,7 +229,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
                         placeholder="123456"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm font-mono text-white placeholder-slate-600 tracking-widest text-center focus:outline-none focus:border-cyan-500"
+                        className="w-full glass-input rounded-xl px-3.5 py-2 text-sm font-mono text-white placeholder-slate-500 tracking-widest text-center focus:outline-none focus:border-cyan-500"
                       />
                     </div>
                     <button
@@ -265,7 +265,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
                     placeholder="e.g. a1i0W--..."
                     value={manualToken}
                     onChange={(e) => setManualToken(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                    className="w-full glass-input rounded-xl p-3 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   />
                   <div className="text-[10px] text-slate-500 font-mono mt-1">
                     Obtained from <code>truecallerpy --installationid</code> or <code>truecallerjs --installationid</code>.
@@ -273,7 +273,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs font-mono rounded-xl shadow-lg transition-colors"
+                  className="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono rounded-xl shadow-lg transition-colors"
                 >
                   Save Truecaller Token
                 </button>
@@ -283,7 +283,7 @@ export const TruecallerModal: React.FC<TruecallerModalProps> = ({ isOpen, onClos
         )}
 
         {/* Footer */}
-        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+        <div className="pt-2 border-t border-[var(--border-glass)] flex items-center justify-between text-[11px] text-slate-500 font-mono">
           <span>Official Android Gateway</span>
           <a
             href="https://www.truecaller.com"

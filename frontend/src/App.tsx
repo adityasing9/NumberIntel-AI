@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/layout/Layout';
 import { DashboardPage } from './pages/DashboardPage';
 import { NewInvestigationPage } from './pages/NewInvestigationPage';
@@ -39,38 +40,40 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/investigations/new" element={<NewInvestigationPage />} />
-            <Route path="/bulk-lookup" element={<BulkLookupPage />} />
-            <Route path="/investigations" element={<InvestigationsPage />} />
-            <Route path="/investigations/:id" element={<InvestigationDetailPage />} />
-            <Route path="/numbers/:taskId/report" element={<NumberDossierPage />} />
-            <Route path="/social-discovery" element={<SocialDiscoveryPage />} />
-            <Route path="/spam-intelligence" element={<SpamIntelligencePage />} />
-            <Route path="/reports" element={<ReportsOverviewPage />} />
-            <Route path="/providers" element={<ProvidersPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/audit-logs" element={<AuditLogsPage />} />
-          </Route>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/investigations/new" element={<NewInvestigationPage />} />
+              <Route path="/bulk-lookup" element={<BulkLookupPage />} />
+              <Route path="/investigations" element={<InvestigationsPage />} />
+              <Route path="/investigations/:id" element={<InvestigationDetailPage />} />
+              <Route path="/numbers/:taskId/report" element={<NumberDossierPage />} />
+              <Route path="/social-discovery" element={<SocialDiscoveryPage />} />
+              <Route path="/spam-intelligence" element={<SpamIntelligencePage />} />
+              <Route path="/reports" element={<ReportsOverviewPage />} />
+              <Route path="/providers" element={<ProvidersPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/audit-logs" element={<AuditLogsPage />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

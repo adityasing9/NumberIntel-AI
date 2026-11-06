@@ -27,10 +27,14 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center p-4">
+      {/* Ambient background glows */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white mx-auto shadow-xl shadow-cyan-950">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white mx-auto shadow-xl shadow-cyan-950/60 border border-cyan-400/30">
             <Radio className="w-6 h-6 animate-pulse" />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center justify-center space-x-1.5">
@@ -43,13 +47,13 @@ export const RegisterPage: React.FC = () => {
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 bg-rose-950/70 border border-rose-800 rounded-xl text-rose-300 text-xs flex items-center space-x-2 font-mono">
+          <div className="p-3.5 glass-card border-rose-500/60 rounded-xl text-rose-300 text-xs flex items-center space-x-2 font-mono">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+        <form onSubmit={handleSubmit} className="glass-panel p-6 sm:p-8 shadow-2xl space-y-4">
           <div>
             <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
               Full Name / Identifier
@@ -61,7 +65,7 @@ export const RegisterPage: React.FC = () => {
                 placeholder="Agent / Specialist Name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                className="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -78,7 +82,7 @@ export const RegisterPage: React.FC = () => {
                 placeholder="investigator@agency.org"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                className="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -92,11 +96,10 @@ export const RegisterPage: React.FC = () => {
               <input
                 type="password"
                 required
-                minLength={8}
-                placeholder="••••••••••••"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                className="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -104,13 +107,13 @@ export const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-900/40 flex items-center justify-center space-x-2 disabled:opacity-50 transition-colors"
+            className="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-950/60 flex items-center justify-center space-x-2 disabled:opacity-50 transition-colors"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Provision Account</span>}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Create Account</span>}
           </button>
 
-          <div className="pt-2 text-center text-xs text-slate-500 font-mono">
-            <span>Already provisioned? </span>
+          <div className="pt-2 text-center text-xs text-slate-400 font-mono">
+            <span>Already have an authorized ID? </span>
             <Link to="/login" className="text-cyan-400 hover:underline">
               Sign In
             </Link>

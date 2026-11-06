@@ -174,6 +174,16 @@ export interface FullNumberReportResponse {
   user_handle?: string;
   bio?: string;
   location?: string;
+  email?: string;
+  designation?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  timezone?: string;
+  mnp_status?: string;
+  lsa_circle?: string;
+  dpdp_status?: string;
   photo_sources?: PhotoSource[];
   web_snippets?: Array<{ title: string; snippet: string; url: string }>;
   free_osint_sources?: string[];

@@ -216,6 +216,33 @@ export const investigationService = {
     } catch (err) {}
     const current = getLocalInvestigations().filter((i) => i.id !== id);
     localStorage.setItem('numberintel_local_invs', JSON.stringify(current));
+    const allItems = getLocalTableItems();
+    delete allItems[id];
+    localStorage.setItem('numberintel_local_items', JSON.stringify(allItems));
+  },
+
+  deleteMultiple: async (ids: string[]): Promise<void> => {
+    try {
+      for (const id of ids) {
+        api.delete(`/investigations/${id}`).catch(() => {});
+      }
+    } catch (err) {}
+    const idSet = new Set(ids);
+    const current = getLocalInvestigations().filter((i) => !idSet.has(i.id));
+    localStorage.setItem('numberintel_local_invs', JSON.stringify(current));
+    const allItems = getLocalTableItems();
+    for (const id of ids) {
+      delete allItems[id];
+    }
+    localStorage.setItem('numberintel_local_items', JSON.stringify(allItems));
+  },
+
+  deleteAll: async (): Promise<void> => {
+    try {
+      await api.delete('/investigations/all');
+    } catch (err) {}
+    localStorage.setItem('numberintel_local_invs', JSON.stringify([]));
+    localStorage.setItem('numberintel_local_items', JSON.stringify({}));
   },
 
   export: (id: string, format: 'csv' | 'xlsx' | 'json'): string => {

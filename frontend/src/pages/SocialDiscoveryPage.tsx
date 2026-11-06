@@ -56,8 +56,8 @@ const PLATFORMS_SPEC = [
 
 export const SocialDiscoveryPage: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[var(--border-glass)]">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-2">
             <Share2 className="w-6 h-6 text-cyan-400" />
@@ -69,14 +69,14 @@ export const SocialDiscoveryPage: React.FC = () => {
         </div>
         <Link
           to="/investigations/new"
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold text-xs rounded-lg transition-colors"
+          className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-950/60 transition-colors"
         >
           Test Target Number
         </Link>
       </div>
 
       {/* Compliance Notice Banner */}
-      <div className="p-4 bg-slate-900/90 border border-cyan-800/60 rounded-xl text-xs space-y-1">
+      <div className="glass-panel p-5 border-cyan-500/40 text-xs space-y-2">
         <div className="flex items-center space-x-2 text-cyan-400 font-bold uppercase tracking-wider font-mono">
           <ShieldCheck className="w-4 h-4" />
           <span>Strict Privacy-by-Design Compliance Standard</span>
@@ -91,10 +91,10 @@ export const SocialDiscoveryPage: React.FC = () => {
       {/* Platform Specification Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {PLATFORMS_SPEC.map((p, idx) => (
-          <div key={idx} className="bg-slate-900/80 border border-slate-800 rounded-xl p-5 space-y-2 hover:border-slate-700 transition-all">
+          <div key={idx} className="glass-card-interactive p-5 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono text-cyan-400 uppercase tracking-wider">{p.category}</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full glass-card text-slate-300">
                 {p.badge}
               </span>
             </div>

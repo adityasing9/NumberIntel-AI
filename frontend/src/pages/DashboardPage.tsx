@@ -11,7 +11,10 @@ import {
   XCircle,
   ArrowUpRight,
   RefreshCw,
-  FileText
+  FileText,
+  Activity,
+  Layers,
+  Globe
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -76,9 +79,9 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[var(--border-glass)]">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-2">
             <span>Threat Intelligence & OSINT Operations</span>
@@ -90,24 +93,24 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center space-x-3">
           <button
             onClick={fetchData}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-cyan-400 hover:border-cyan-800 transition-colors"
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl glass-button text-xs font-mono text-slate-300 hover:text-cyan-400 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh Telemetry</span>
           </button>
           <Link
             to="/bulk-lookup"
-            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold text-xs transition-colors shadow-lg shadow-cyan-900/30"
+            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition-colors shadow-lg shadow-cyan-950/60"
           >
             <span>+ New Bulk Investigation</span>
           </Link>
         </div>
       </div>
 
-      {/* 6 Key Metric Cards */}
+      {/* 6 Key Metric Cards (Glassmorphic) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* Total Processed */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative overflow-hidden">
+        <div className="glass-card-interactive p-4 relative overflow-hidden">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Processed</div>
           <div className="text-2xl font-bold font-mono text-white mt-1">{metrics.total_numbers_processed}</div>
           <div className="text-[10px] text-cyan-400 mt-1 flex items-center space-x-1">
@@ -120,10 +123,10 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Verified Public Matches */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative overflow-hidden">
+        <div className="glass-card-interactive p-4 relative overflow-hidden">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Verified Matches</div>
           <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">{metrics.verified_public_matches}</div>
-          <div className="text-[10px] text-emerald-500 mt-1 flex items-center space-x-1">
+          <div className="text-[10px] text-emerald-400 mt-1 flex items-center space-x-1">
             <ShieldCheck className="w-3 h-3" />
             <span>Official APIs</span>
           </div>
@@ -133,10 +136,10 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Possible Profile Matches */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative overflow-hidden">
+        <div className="glass-card-interactive p-4 relative overflow-hidden">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Possible Matches</div>
           <div className="text-2xl font-bold font-mono text-cyan-400 mt-1">{metrics.possible_profile_matches}</div>
-          <div className="text-[10px] text-cyan-500 mt-1 flex items-center space-x-1">
+          <div className="text-[10px] text-cyan-400 mt-1 flex items-center space-x-1">
             <Users className="w-3 h-3" />
             <span>Indexed Citations</span>
           </div>
@@ -146,10 +149,10 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Spam Associated */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative overflow-hidden">
+        <div className="glass-card-interactive p-4 relative overflow-hidden">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Spam / Fraud</div>
           <div className="text-2xl font-bold font-mono text-rose-400 mt-1">{metrics.spam_associated_numbers}</div>
-          <div className="text-[10px] text-rose-500 mt-1 flex items-center space-x-1">
+          <div className="text-[10px] text-rose-400 mt-1 flex items-center space-x-1">
             <AlertTriangle className="w-3 h-3" />
             <span>Threat Feeds</span>
           </div>
@@ -159,10 +162,10 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Business Lines Identified */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative overflow-hidden">
+        <div className="glass-card-interactive p-4 relative overflow-hidden">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Business Lines</div>
           <div className="text-2xl font-bold font-mono text-purple-400 mt-1">{metrics.business_numbers_identified}</div>
-          <div className="text-[10px] text-purple-500 mt-1 flex items-center space-x-1">
+          <div className="text-[10px] text-purple-400 mt-1 flex items-center space-x-1">
             <Building2 className="w-3 h-3" />
             <span>Toll-Free & UAN</span>
           </div>
@@ -172,7 +175,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Failed Lookups */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-4 relative overflow-hidden">
+        <div className="glass-card-interactive p-4 relative overflow-hidden">
           <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Failed Lookups</div>
           <div className="text-2xl font-bold font-mono text-slate-400 mt-1">{metrics.failed_lookups}</div>
           <div className="text-[10px] text-slate-500 mt-1 flex items-center space-x-1">
@@ -185,16 +188,16 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Charts Grid */}
+      {/* Main Charts Grid (Glassmorphism) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Timeline Chart */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-semibold text-white">Investigation Activity Over Time</h2>
               <p className="text-xs text-slate-400">Total lookups vs verified matches and spam detections</p>
             </div>
-            <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-cyan-400 glass-card px-2 py-0.5 rounded">
               7-Day Rolling
             </span>
           </div>
@@ -211,11 +214,11 @@ export const DashboardPage: React.FC = () => {
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="date" stroke="#64748b" fontSize={11} />
                 <YAxis stroke="#64748b" fontSize={11} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#020617', borderColor: '#334155', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-glass)', borderRadius: '12px' }}
                   labelStyle={{ color: '#e2e8f0' }}
                 />
                 <Area type="monotone" dataKey="searches" stroke="#06b6d4" fillOpacity={1} fill="url(#colorSearches)" name="Searches" />
@@ -228,37 +231,37 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Platform Footprint Chart */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5">
+        <div className="glass-panel p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-semibold text-white">Results by Platform & Status</h2>
               <p className="text-xs text-slate-400">Verified official matches vs possible indexed mentions</p>
             </div>
-            <span className="text-[10px] font-mono text-slate-400">9 Core Platforms</span>
+            <span className="text-[10px] font-mono text-slate-400 glass-card px-2 py-0.5 rounded">9 Core Platforms</span>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data?.platforms || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis dataKey="platform" stroke="#64748b" fontSize={10} interval={0} angle={-25} textAnchor="end" height={40} />
                 <YAxis stroke="#64748b" fontSize={11} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#020617', borderColor: '#334155', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-glass)', borderRadius: '12px' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Bar dataKey="verified" fill="#10b981" name="Verified Match" stackId="a" />
                 <Bar dataKey="possible" fill="#06b6d4" name="Possible Match" stackId="a" />
-                <Bar dataKey="unverified" fill="#334155" name="Not Verifiable / Clean" stackId="a" />
+                <Bar dataKey="unverified" fill="#475569" name="Not Verifiable / Clean" stackId="a" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Secondary Charts: Countries & Spam Distribution */}
+      {/* Secondary Charts: Countries, Spam, Recent Invs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Results by Country */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 lg:col-span-1">
+        <div className="glass-panel p-5 lg:col-span-1">
           <h2 className="text-sm font-semibold text-white mb-1">Top Numbering Regions</h2>
           <p className="text-xs text-slate-400 mb-4">Allocated ITU-T countries</p>
           <div className="space-y-3">
@@ -266,7 +269,7 @@ export const DashboardPage: React.FC = () => {
               data.countries.map((c) => (
                 <div key={c.code} className="flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono text-cyan-400 font-bold bg-slate-800 px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-cyan-400 font-bold glass-card px-2 py-0.5 rounded">
                       {c.code}
                     </span>
                     <span className="text-slate-300">{c.country}</span>
@@ -281,7 +284,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Spam Distribution */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 lg:col-span-1">
+        <div className="glass-panel p-5 lg:col-span-1">
           <h2 className="text-sm font-semibold text-white mb-1">Spam Category Breakdown</h2>
           <p className="text-xs text-slate-400 mb-4">Threat report distribution</p>
           <div className="h-48">
@@ -302,7 +305,7 @@ export const DashboardPage: React.FC = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#020617', borderColor: '#334155', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-glass)', borderRadius: '12px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -310,7 +313,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Recent Investigations List */}
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 lg:col-span-1">
+        <div className="glass-panel p-5 lg:col-span-1">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-white">Recent Investigations</h2>
             <Link to="/investigations" className="text-xs text-cyan-400 hover:underline flex items-center space-x-1">
@@ -324,11 +327,11 @@ export const DashboardPage: React.FC = () => {
                 <Link
                   key={inv.id}
                   to={`/investigations/${inv.id}`}
-                  className="block p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-colors"
+                  className="block p-2.5 rounded-xl glass-card hover:border-cyan-500/50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-slate-200 truncate max-w-[170px]">{inv.title}</span>
-                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
                       inv.status === 'completed'
                         ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60'
                         : 'bg-cyan-950 text-cyan-400 border border-cyan-800/60'
@@ -336,7 +339,7 @@ export const DashboardPage: React.FC = () => {
                       {inv.status}
                     </span>
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono mt-1 flex justify-between">
+                  <div className="text-[10px] text-slate-400 font-mono mt-1 flex justify-between">
                     <span>{inv.total_numbers} numbers</span>
                     <span>{new Date(inv.created_at).toLocaleDateString()}</span>
                   </div>

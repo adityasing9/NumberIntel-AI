@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { investigationService } from '../services/api';
 import { Investigation, BulkResultTableItem, PaginatedTableResponse } from '../types';
 import { StatusBadge } from '../components/ui/StatusBadge';
@@ -16,11 +16,18 @@ import {
   RefreshCw,
   ArrowLeft,
   CheckSquare,
-  Square
+  Square,
+  Trash2,
+  AlertTriangle,
+  Radio,
+  ShieldCheck,
+  Building2,
+  Layers
 } from 'lucide-react';
 
 export const InvestigationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [investigation, setInvestigation] = useState<Investigation | null>(null);
   const [tableData, setTableData] = useState<PaginatedTableResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +40,10 @@ export const InvestigationDetailPage: React.FC = () => {
 
   // Multi-select
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Deletion Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = async () => {
     if (!id) return;
@@ -72,31 +83,45 @@ export const InvestigationDetailPage: React.FC = () => {
 
   const toggleSelect = (taskId: string) => {
     if (selectedIds.includes(taskId)) {
-      setSelectedIds(selectedIds.filter((id) => id !== taskId));
+      setSelectedIds(selectedIds.filter((item) => item !== taskId));
     } else {
       setSelectedIds([...selectedIds, taskId]);
     }
   };
 
+  const handleDeleteCase = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      await investigationService.delete(id);
+      setIsDeleteModalOpen(false);
+      navigate('/investigations');
+    } catch (err) {
+      console.error('Failed to delete investigation case:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Top Navigation & Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[var(--border-glass)]">
         <div>
           <Link
             to="/investigations"
-            className="text-xs font-mono text-cyan-400 hover:underline flex items-center space-x-1 mb-1"
+            className="text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 mb-2 transition-colors"
           >
-            <ArrowLeft className="w-3 h-3" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Investigations History</span>
           </Link>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-3">
             <span>{investigation?.title || 'Investigation Case Dossier'}</span>
             {investigation && (
-              <span className={`px-2 py-0.5 rounded text-[11px] font-mono uppercase ${
+              <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase ${
                 investigation.status === 'completed'
-                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60'
-                  : 'bg-cyan-950 text-cyan-400 border border-cyan-800/60'
+                  ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60'
+                  : 'bg-cyan-950/80 text-cyan-400 border border-cyan-800/60'
               }`}>
                 {investigation.status}
               </span>
@@ -107,36 +132,48 @@ export const InvestigationDetailPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Export buttons */}
-        {id && (
-          <div className="flex items-center space-x-2">
-            <a
-              href={investigationService.export(id, 'csv')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-cyan-400 transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>CSV</span>
-            </a>
-            <a
-              href={investigationService.export(id, 'xlsx')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-emerald-400 transition-colors"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Excel</span>
-            </a>
-            <a
-              href={investigationService.export(id, 'json')}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-purple-400 transition-colors"
-            >
-              <FileCode className="w-3.5 h-3.5" />
-              <span>JSON</span>
-            </a>
-          </div>
-        )}
+        {/* Action Controls & Export Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Delete Investigation Case */}
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-xs font-mono text-rose-300 hover:text-rose-200 transition-colors"
+            title="Delete this entire investigation case"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete Case</span>
+          </button>
+
+          {id && (
+            <>
+              <a
+                href={investigationService.export(id, 'csv')}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl glass-button text-xs font-mono text-slate-300 hover:text-cyan-400 transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>CSV</span>
+              </a>
+              <a
+                href={investigationService.export(id, 'xlsx')}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl glass-button text-xs font-mono text-slate-300 hover:text-emerald-400 transition-colors"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Excel</span>
+              </a>
+              <a
+                href={investigationService.export(id, 'json')}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl glass-button text-xs font-mono text-slate-300 hover:text-purple-400 transition-colors"
+              >
+                <FileCode className="w-3.5 h-3.5" />
+                <span>JSON</span>
+              </a>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Search and Filters Bar */}
-      <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-3.5 flex flex-col md:flex-row items-center justify-between gap-3">
+      {/* Search and Filters Bar (Glassmorphic) */}
+      <div className="glass-panel p-3.5 flex flex-col md:flex-row items-center justify-between gap-3">
         <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2 w-full md:w-96">
           <div className="relative w-full">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
@@ -145,12 +182,12 @@ export const InvestigationDetailPage: React.FC = () => {
               placeholder="Search phone, carrier, raw number..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+              className="w-full glass-input rounded-xl pl-9 pr-3 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
           <button
             type="submit"
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 rounded-lg border border-slate-700"
+            className="px-3.5 py-1.5 glass-button text-xs font-mono text-slate-200 rounded-xl hover:border-cyan-500"
           >
             Search
           </button>
@@ -158,12 +195,12 @@ export const InvestigationDetailPage: React.FC = () => {
 
         <div className="flex items-center space-x-3 w-full md:w-auto justify-end">
           <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-mono">
-            <Filter className="w-3.5 h-3.5" />
+            <Filter className="w-3.5 h-3.5 text-cyan-400" />
             <span>Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+              className="glass-input rounded-xl px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
             >
               <option value="">All Statuses</option>
               <option value="completed">Completed</option>
@@ -175,18 +212,18 @@ export const InvestigationDetailPage: React.FC = () => {
           <button
             onClick={fetchData}
             title="Refresh Table"
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-cyan-400 transition-colors"
+            className="p-1.5 glass-button rounded-xl text-slate-400 hover:text-cyan-400 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Main Results Data Table */}
-      <div className="bg-slate-900/80 rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+      {/* Main Results Data Table (Glassmorphism) */}
+      <div className="glass-panel overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+            <thead className="bg-slate-950/60 text-slate-400 border-b border-[var(--border-glass)] uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="p-3 w-8">
                   <button onClick={toggleSelectAll} className="text-slate-400 hover:text-white">
@@ -208,7 +245,7 @@ export const InvestigationDetailPage: React.FC = () => {
                 <th className="p-3 text-right">Dossier</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
+            <tbody className="divide-y divide-[var(--border-glass)] text-slate-300">
               {loading ? (
                 <tr>
                   <td colSpan={10} className="p-8 text-center text-cyan-400 font-mono">
@@ -220,7 +257,7 @@ export const InvestigationDetailPage: React.FC = () => {
                 </tr>
               ) : tableData && tableData.items.length > 0 ? (
                 tableData.items.map((item) => (
-                  <tr key={item.task_id} className="hover:bg-slate-800/50 transition-colors">
+                  <tr key={item.task_id} className="hover:bg-cyan-500/5 transition-colors">
                     <td className="p-3">
                       <button onClick={() => toggleSelect(item.task_id)} className="text-slate-400 hover:text-white">
                         {selectedIds.includes(item.task_id) ? (
@@ -240,7 +277,7 @@ export const InvestigationDetailPage: React.FC = () => {
                       <div className="text-[10px] text-slate-500">{item.raw_input}</div>
                     </td>
                     <td className="p-3">
-                      <span className="font-bold text-slate-300">{item.country_iso2}</span>
+                      <span className="font-bold text-slate-200">{item.country_iso2}</span>
                       <span className="text-slate-500 ml-1">(+{item.country_code})</span>
                     </td>
                     <td className="p-3">
@@ -260,7 +297,7 @@ export const InvestigationDetailPage: React.FC = () => {
                             }}
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-cyan-400 font-mono text-[10px] font-bold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-slate-950/80 border border-[var(--border-glass)] flex items-center justify-center text-cyan-400 font-mono text-[10px] font-bold flex-shrink-0">
                             {item.country_iso2 || 'TEL'}
                           </div>
                         )}
@@ -282,7 +319,7 @@ export const InvestigationDetailPage: React.FC = () => {
                               )}
                             </div>
                           ) : (
-                            <span className="text-slate-600 font-mono text-[11px]">Unindexed / Private</span>
+                            <span className="text-slate-500 font-mono text-[11px]">Unindexed / Private</span>
                           )}
                         </div>
                       </div>
@@ -299,7 +336,7 @@ export const InvestigationDetailPage: React.FC = () => {
                           ? 'bg-rose-950 text-rose-400 border border-rose-800'
                           : item.spam_risk_level === 'moderate'
                           ? 'bg-amber-950 text-amber-400 border border-amber-800'
-                          : 'bg-slate-900 text-slate-400 border border-slate-800'
+                          : 'bg-slate-950 text-slate-400 border border-[var(--border-glass)]'
                       }`}>
                         {item.spam_risk_level}
                       </span>
@@ -312,7 +349,7 @@ export const InvestigationDetailPage: React.FC = () => {
                     <td className="p-3 text-right">
                       <Link
                         to={`/numbers/${item.task_id}/report`}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 transition-colors"
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg glass-button text-cyan-400 hover:text-cyan-300 transition-colors"
                       >
                         <span>View</span>
                         <ExternalLink className="w-3 h-3" />
@@ -333,7 +370,7 @@ export const InvestigationDetailPage: React.FC = () => {
 
         {/* Server-Side Pagination Controls */}
         {tableData && (
-          <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-slate-400">
+          <div className="p-4 bg-slate-950/60 border-t border-[var(--border-glass)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-slate-400">
             <div>
               Showing {tableData.items.length === 0 ? 0 : (page - 1) * pageSize + 1} to{' '}
               {Math.min(page * pageSize, tableData.total)} of {tableData.total} records
@@ -342,7 +379,7 @@ export const InvestigationDetailPage: React.FC = () => {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-800"
+                className="p-1.5 rounded-lg glass-button text-slate-300 disabled:opacity-40"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -352,7 +389,7 @@ export const InvestigationDetailPage: React.FC = () => {
               <button
                 onClick={() => setPage((p) => Math.min(tableData.total_pages, p + 1))}
                 disabled={page >= tableData.total_pages}
-                className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-800"
+                className="p-1.5 rounded-lg glass-button text-slate-300 disabled:opacity-40"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -360,6 +397,51 @@ export const InvestigationDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsDeleteModalOpen(false)}
+        >
+          <div
+            className="glass-panel relative max-w-md w-full p-6 space-y-4 border-rose-500/40 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center space-x-3 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Entire Case?</h3>
+                <p className="text-xs text-slate-400">Case ID: {id}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 font-sans leading-relaxed">
+              Are you sure you want to delete this entire investigation case? All {investigation?.total_numbers || 0} phone number records and their cached reports will be permanently removed.
+            </p>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 glass-button text-xs font-mono text-slate-300 hover:text-white rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCase}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold rounded-xl shadow-lg shadow-rose-950/60 transition-colors flex items-center space-x-1.5"
+              >
+                {isDeleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>{isDeleting ? 'Deleting...' : 'Delete Case'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

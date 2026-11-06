@@ -57,11 +57,10 @@ export const NewInvestigationPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Truecaller Gateway Status Bar */}
       {/* Free Internet OSINT Engine Banner */}
-      <div className="p-3.5 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border border-emerald-900/50 rounded-2xl flex items-center justify-between text-xs font-mono">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 bg-emerald-600 rounded-lg text-white">
+      <div className="glass-panel p-4 border-emerald-500/40 flex items-center justify-between text-xs font-mono">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-emerald-600 rounded-xl text-white shadow-lg shadow-emerald-950/50">
             <Globe className="w-4 h-4" />
           </div>
           <div>
@@ -72,21 +71,21 @@ export const NewInvestigationPage: React.FC = () => {
                 <span>100% FREE ACTIVE</span>
               </span>
             </div>
-            <div className="text-[10px] text-slate-400">
+            <div className="text-[10px] text-slate-400 mt-0.5">
               Scans open web search indices, Tellows anti-spam registry, TRAI/ITU grids, and public directories automatically without requiring logins or OTP.
             </div>
           </div>
         </div>
 
-        <span className="hidden sm:inline-block px-2.5 py-1 bg-emerald-950/80 border border-emerald-800 text-emerald-300 rounded-lg text-[10px] font-semibold">
+        <span className="hidden sm:inline-block px-2.5 py-1 glass-card text-emerald-300 rounded-lg text-[10px] font-semibold border-emerald-500/30">
           Auto-Harvest Enabled
         </span>
       </div>
 
       {/* Truecaller Gateway (Optional) */}
-      <div className="p-3.5 bg-gradient-to-r from-blue-950/70 via-slate-900 to-slate-900 border border-blue-900/50 rounded-2xl flex items-center justify-between text-xs font-mono">
-        <div className="flex items-center space-x-2.5">
-          <div className="p-1.5 bg-blue-600 rounded-lg text-white">
+      <div className="glass-panel p-4 border-blue-500/40 flex items-center justify-between text-xs font-mono">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-900/40">
             <Phone className="w-4 h-4" />
           </div>
           <div>
@@ -99,7 +98,7 @@ export const NewInvestigationPage: React.FC = () => {
                 </span>
               )}
             </div>
-            <div className="text-[10px] text-slate-400">
+            <div className="text-[10px] text-slate-400 mt-0.5">
               {isTruecallerConnected
                 ? 'Queries will pull real caller names, carrier networks, and photos from Truecaller.'
                 : 'Connect Truecaller via SMS OTP to fetch real caller names & profile pictures.'}
@@ -110,7 +109,7 @@ export const NewInvestigationPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsTcModalOpen(true)}
-          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] rounded-lg shadow transition-colors flex items-center space-x-1"
+          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] rounded-xl shadow transition-colors flex items-center space-x-1"
         >
           <Key className="w-3 h-3" />
           <span>{isTruecallerConnected ? 'Manage' : 'Connect'}</span>
@@ -118,13 +117,13 @@ export const NewInvestigationPage: React.FC = () => {
       </div>
 
       {errorMsg && (
-        <div className="p-3 bg-rose-950/70 border border-rose-800 rounded-xl text-rose-300 text-xs flex items-center space-x-2 font-mono">
+        <div className="p-3.5 glass-card border-rose-500/50 rounded-xl text-rose-300 text-xs flex items-center space-x-2 font-mono">
           <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+      <form onSubmit={handleSubmit} className="glass-panel p-6 sm:p-8 space-y-5">
         <div>
           <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
             Target Telephone Number
@@ -134,10 +133,10 @@ export const NewInvestigationPage: React.FC = () => {
             <input
               type="text"
               required
-              placeholder="e.g., +91 98765 43210 or 1-800-273-8255"
+              placeholder="e.g., +91 98765 43210 or +977 98412 34567"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+              className="w-full glass-input rounded-xl pl-10 pr-4 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
         </div>
@@ -151,10 +150,10 @@ export const NewInvestigationPage: React.FC = () => {
             <select
               value={defaultCountry}
               onChange={(e) => setDefaultCountry(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="w-full glass-input rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
             >
               {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
+                <option key={c.code} value={c.code} className="bg-slate-900 text-white">
                   {c.name}
                 </option>
               ))}
@@ -170,7 +169,7 @@ export const NewInvestigationPage: React.FC = () => {
               placeholder="e.g., Case #408 Target Audit"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+              className="w-full glass-input rounded-xl px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
         </div>
@@ -178,7 +177,7 @@ export const NewInvestigationPage: React.FC = () => {
         <button
           type="submit"
           disabled={loading || !phoneNumber.trim()}
-          className="w-full mt-2 py-3 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-900/40 flex items-center justify-center space-x-2 disabled:opacity-50 transition-colors"
+          className="w-full mt-2 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-950/60 flex items-center justify-center space-x-2 disabled:opacity-50 transition-colors"
         >
           {loading ? (
             <>

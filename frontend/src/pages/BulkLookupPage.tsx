@@ -49,11 +49,9 @@ export const BulkLookupPage: React.FC = () => {
     let textToValidate = rawText;
 
     if (tab === 'file' && file) {
-      // Read text file directly if text, or notify
       if (file.name.endsWith('.txt')) {
         textToValidate = await file.text();
       } else {
-        // For CSV/XLSX, preflight is directly supported via bulk submit preview
         textToValidate = `File: ${file.name}`;
       }
     }
@@ -69,7 +67,6 @@ export const BulkLookupPage: React.FC = () => {
         const res = await bulkService.preflight(textToValidate, defaultCountry);
         setPreflight(res);
       } else if (file) {
-        // For CSV / Excel, we submit preflight via mock or upload
         setErrorMsg(null);
         setPreflight({
           total_detected: 10,
@@ -100,7 +97,6 @@ export const BulkLookupPage: React.FC = () => {
         throw new Error('No input provided.');
       }
 
-      // Navigate to investigation details table
       navigate(`/investigations/${progress.investigation_id}`);
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || 'Failed to initialize bulk job.');
@@ -109,7 +105,7 @@ export const BulkLookupPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 pb-16">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-2">
@@ -121,14 +117,14 @@ export const BulkLookupPage: React.FC = () => {
       </div>
 
       {errorMsg && (
-        <div className="p-3.5 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-300 text-xs flex items-center space-x-2">
+        <div className="p-3.5 glass-card border-rose-500/60 rounded-xl text-rose-300 text-xs flex items-center space-x-2">
           <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* Configuration Controls */}
-      <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-4">
+      {/* Configuration Controls (Glassmorphic) */}
+      <div className="glass-panel p-6 space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
@@ -139,7 +135,7 @@ export const BulkLookupPage: React.FC = () => {
               placeholder="e.g., APAC Corporate Telephony Audit"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+              className="w-full glass-input rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
           <div>
@@ -150,10 +146,10 @@ export const BulkLookupPage: React.FC = () => {
             <select
               value={defaultCountry}
               onChange={(e) => setDefaultCountry(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 font-mono"
+              className="w-full glass-input rounded-xl px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 font-mono"
             >
               {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
+                <option key={c.code} value={c.code} className="bg-slate-900 text-white">
                   {c.name}
                 </option>
               ))}
@@ -162,13 +158,13 @@ export const BulkLookupPage: React.FC = () => {
         </div>
 
         {/* Tab Toggle */}
-        <div className="pt-2 border-t border-slate-800">
-          <div className="flex space-x-2 bg-slate-950 p-1 rounded-lg border border-slate-800 w-fit">
+        <div className="pt-2 border-t border-[var(--border-glass)]">
+          <div className="flex space-x-2 glass-card p-1 rounded-xl w-fit">
             <button
               onClick={() => { setTab('paste'); setPreflight(null); }}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 tab === 'paste'
-                  ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
+                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -176,9 +172,9 @@ export const BulkLookupPage: React.FC = () => {
             </button>
             <button
               onClick={() => { setTab('file'); setPreflight(null); }}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 tab === 'file'
-                  ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
+                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -194,8 +190,8 @@ export const BulkLookupPage: React.FC = () => {
               rows={8}
               value={rawText}
               onChange={(e) => { setRawText(e.target.value); setPreflight(null); }}
-              placeholder={`Paste numbers (one per line, comma or space separated):\n+919876543210\n9876543210\n+18002738255\n+442079460912`}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+              placeholder={`Paste numbers (one per line, comma or space separated):\n+919876543210\n9876543210\n+9779841234567\n+18002738255\n+442079460912`}
+              className="w-full glass-input rounded-xl p-3 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             ></textarea>
             <div className="text-[11px] text-slate-500 font-mono mt-1 flex justify-between">
               <span>Supports international formats (+E.164, national with dashes or spaces)</span>
@@ -215,10 +211,10 @@ export const BulkLookupPage: React.FC = () => {
                   setPreflight(null);
                 }
               }}
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+              className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
                 isDragging
                   ? 'border-cyan-400 bg-cyan-950/20'
-                  : 'border-slate-800 hover:border-slate-700 bg-slate-950/50'
+                  : 'border-[var(--border-glass)] hover:border-cyan-500/50 glass-card'
               }`}
             >
               <UploadCloud className="w-10 h-10 text-cyan-400 mx-auto mb-3" />
@@ -242,7 +238,7 @@ export const BulkLookupPage: React.FC = () => {
               />
               <label
                 htmlFor="file-input"
-                className="inline-block mt-4 px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-cyan-400 cursor-pointer border border-slate-700"
+                className="inline-block mt-4 px-4 py-1.5 rounded-xl glass-button text-xs font-mono text-cyan-400 cursor-pointer"
               >
                 Choose File
               </label>
@@ -251,11 +247,11 @@ export const BulkLookupPage: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-3">
+        <div className="flex items-center justify-between pt-3 border-t border-[var(--border-glass)]">
           <button
             onClick={handlePreflight}
             disabled={isValidating || (!rawText.trim() && !file)}
-            className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 border border-slate-700 disabled:opacity-50 transition-colors"
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl glass-button text-xs font-mono text-slate-200 disabled:opacity-50 transition-colors"
           >
             {isValidating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" /> : <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />}
             <span>Run Pre-Flight Validator</span>
@@ -265,7 +261,7 @@ export const BulkLookupPage: React.FC = () => {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || preflight.valid_count === 0}
-              className="flex items-center space-x-2 px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-900/40 disabled:opacity-50 transition-colors"
+              className="flex items-center space-x-2 px-6 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-950/60 disabled:opacity-50 transition-colors"
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               <span>Initiate Investigation Batch ({preflight.valid_count} Numbers)</span>
@@ -276,29 +272,29 @@ export const BulkLookupPage: React.FC = () => {
 
       {/* Preflight Statistics & Sample Table */}
       {preflight && (
-        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-4">
+        <div className="glass-panel p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-white">Pre-Flight Validation Assessment</h2>
-            <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded">
+            <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2.5 py-0.5 rounded-full">
               libphonenumber verified
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-3 text-center font-mono">
-            <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center font-mono">
+            <div className="glass-card p-3.5 rounded-xl">
               <div className="text-[10px] text-slate-500 uppercase">Total Detected</div>
               <div className="text-xl font-bold text-white mt-0.5">{preflight.total_detected}</div>
             </div>
-            <div className="bg-slate-950 p-3 rounded-lg border border-emerald-900/50">
-              <div className="text-[10px] text-emerald-500 uppercase">Valid ITU-T</div>
+            <div className="glass-card p-3.5 rounded-xl border-emerald-500/40">
+              <div className="text-[10px] text-emerald-400 uppercase">Valid ITU-T</div>
               <div className="text-xl font-bold text-emerald-400 mt-0.5">{preflight.valid_count}</div>
             </div>
-            <div className="bg-slate-950 p-3 rounded-lg border border-cyan-900/50">
-              <div className="text-[10px] text-cyan-500 uppercase">Duplicates Removed</div>
+            <div className="glass-card p-3.5 rounded-xl border-cyan-500/40">
+              <div className="text-[10px] text-cyan-400 uppercase">Duplicates Removed</div>
               <div className="text-xl font-bold text-cyan-400 mt-0.5">{preflight.duplicate_count}</div>
             </div>
-            <div className="bg-slate-950 p-3 rounded-lg border border-rose-900/50">
-              <div className="text-[10px] text-rose-500 uppercase">Invalid Formats</div>
+            <div className="glass-card p-3.5 rounded-xl border-rose-500/40">
+              <div className="text-[10px] text-rose-400 uppercase">Invalid Formats</div>
               <div className="text-xl font-bold text-rose-400 mt-0.5">{preflight.invalid_count}</div>
             </div>
           </div>
@@ -307,9 +303,9 @@ export const BulkLookupPage: React.FC = () => {
           {preflight.valid_samples.length > 0 && (
             <div>
               <div className="text-xs font-mono text-slate-400 mb-2">Sample Normalized Ingestion Records:</div>
-              <div className="overflow-x-auto rounded-lg border border-slate-800">
+              <div className="overflow-x-auto rounded-xl border border-[var(--border-glass)]">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                  <thead className="bg-slate-950/60 text-slate-400 border-b border-[var(--border-glass)]">
                     <tr>
                       <th className="p-2.5">Raw Input</th>
                       <th className="p-2.5">E.164 Format</th>
@@ -318,9 +314,9 @@ export const BulkLookupPage: React.FC = () => {
                       <th className="p-2.5">Carrier</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
+                  <tbody className="divide-y divide-[var(--border-glass)] text-slate-300">
                     {preflight.valid_samples.slice(0, 5).map((s, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/40">
+                      <tr key={idx} className="hover:bg-cyan-500/5">
                         <td className="p-2.5 text-slate-400">{s.raw_input}</td>
                         <td className="p-2.5 text-cyan-400 font-semibold">{s.e164_format}</td>
                         <td className="p-2.5">{s.country_iso2} (+{s.country_code})</td>
