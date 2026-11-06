@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
-from app.api.v1 import auth, investigations, bulk, numbers, reports, providers, analytics, spam, audit
+from app.api.v1 import auth, investigations, bulk, numbers, reports, providers, analytics, spam, audit, truecaller
 from app.models.models import Role, User, SourceProvider, UserSettings
 from app.core.security import get_password_hash
 
@@ -115,6 +115,7 @@ app.include_router(providers.router, prefix=f"{settings.API_V1_STR}/providers", 
 app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics"])
 app.include_router(spam.router, prefix=f"{settings.API_V1_STR}/spam", tags=["Spam Intelligence"])
 app.include_router(audit.router, prefix=f"{settings.API_V1_STR}/audit", tags=["Security & Audit"])
+app.include_router(truecaller.router, prefix=f"{settings.API_V1_STR}/truecaller", tags=["Truecaller Gateway"])
 
 
 @app.get("/health", tags=["Health"])

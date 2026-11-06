@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { numberService } from '../services/api';
 import { FullNumberReportResponse, PhotoSource } from '../types';
 import { PlatformCard } from '../components/ui/PlatformCard';
+import { TruecallerModal } from '../components/ui/TruecallerModal';
+import { truecallerService } from '../services/truecallerService';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -26,7 +28,8 @@ import {
   Layers,
   Search,
   Lock,
-  MessageSquare
+  MessageSquare,
+  Key
 } from 'lucide-react';
 
 export const NumberDossierPage: React.FC = () => {
@@ -35,6 +38,12 @@ export const NumberDossierPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activePhotoModal, setActivePhotoModal] = useState<string | null>(null);
+
+  // Truecaller States
+  const [isTcModalOpen, setIsTcModalOpen] = useState(false);
+  const [tcLoading, setTcLoading] = useState(false);
+  const [tcMessage, setTcMessage] = useState<string | null>(null);
+  const [isTruecallerConnected, setIsTruecallerConnected] = useState<boolean>(!!truecallerService.getToken());
 
   const fetchDossier = async () => {
     if (!taskId) return;
@@ -52,7 +61,50 @@ export const NumberDossierPage: React.FC = () => {
 
   useEffect(() => {
     fetchDossier();
+    setIsTruecallerConnected(!!truecallerService.getToken());
   }, [taskId]);
+
+  const handleFetchTruecaller = async () => {
+    if (!report) return;
+    const token = truecallerService.getToken();
+    if (!token) {
+      setIsTcModalOpen(true);
+      return;
+    }
+
+    setTcLoading(true);
+    setTcMessage('Querying Truecaller Live Gateway API...');
+    try {
+      const res = await truecallerService.search(report.e164_format);
+      if (res && res.name) {
+        setReport((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            public_name: res.name,
+            carrier_name: res.carrier || prev.carrier_name,
+            carrier_circle: res.city || prev.carrier_circle,
+            avatar_url: res.imageUrl || prev.avatar_url,
+            photo_sources: res.imageUrl ? [
+              { platform: 'Truecaller CDN', url: res.imageUrl, label: 'Truecaller Verified Profile Photo' },
+              ...(prev.photo_sources || [])
+            ] : prev.photo_sources,
+            overall_verification_status: 'verified',
+            summary: `Caller confirmed via Truecaller Gateway. Identified name: ${res.name} (${res.carrier || prev.carrier_name}). Truecaller spam reputation score: ${res.spamScore}.`
+          };
+        });
+        setTcMessage(`✓ Success! Truecaller details fetched: ${res.name} (${res.carrier || report.carrier_name})`);
+      } else {
+        setTcMessage('No profile returned from Truecaller for this number, or session expired.');
+        setIsTcModalOpen(true);
+      }
+    } catch (err: any) {
+      setTcMessage(err.message || 'Failed to query Truecaller.');
+      setIsTcModalOpen(true);
+    } finally {
+      setTcLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -226,7 +278,71 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 2: LIVE OSINT INVESTIGATION TOOLKIT (ONE-CLICK REAL VERIFICATION)
+          SECTION 2: TRUECALLER LIVE GATEWAY CARD
+         ========================================================================= */}
+      <div className="bg-gradient-to-r from-blue-950/70 via-slate-900 to-slate-950 border border-blue-800/60 rounded-2xl p-5 shadow-xl space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-blue-900/40">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-900/40">
+              <Phone className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-base font-bold text-white tracking-tight">Truecaller Caller Intelligence Gateway</h3>
+                {isTruecallerConnected ? (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center space-x-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span>GATEWAY CONNECTED</span>
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-950 text-amber-300 border border-amber-800">
+                    NOT CONNECTED
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Query Truecaller's 350M+ verified caller directory for authentic name, carrier network, and photo avatar.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleFetchTruecaller}
+              disabled={tcLoading}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold rounded-xl shadow-lg shadow-blue-950/50 transition-all flex items-center space-x-1.5"
+            >
+              {tcLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+              <span>{isTruecallerConnected ? 'Fetch from Truecaller' : 'Connect & Fetch from Truecaller'}</span>
+            </button>
+            <button
+              onClick={() => setIsTcModalOpen(true)}
+              className="px-3 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-mono rounded-xl transition-colors flex items-center space-x-1"
+            >
+              <Key className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{isTruecallerConnected ? 'Manage Token' : 'Connect Gateway'}</span>
+            </button>
+            <a
+              href={`https://www.truecaller.com/search/in/${cleanDigits}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-mono rounded-xl transition-colors flex items-center space-x-1"
+            >
+              <span>Truecaller Web</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+
+        {tcMessage && (
+          <div className="p-3 bg-slate-950/80 border border-blue-900/50 rounded-xl text-xs font-mono text-cyan-300 flex items-center justify-between">
+            <span>{tcMessage}</span>
+          </div>
+        )}
+      </div>
+
+      {/* =========================================================================
+          SECTION 3: LIVE OSINT INVESTIGATION TOOLKIT (ONE-CLICK REAL VERIFICATION)
          ========================================================================= */}
       <div className="bg-slate-900/90 rounded-xl border border-cyan-900/40 p-5 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -331,7 +447,7 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 3: CARRIER & TELECOM NETWORK INTELLIGENCE (TRAI & ITU-T ACCURATE)
+          SECTION 4: CARRIER & TELECOM NETWORK INTELLIGENCE (TRAI & ITU-T ACCURATE)
          ========================================================================= */}
       <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -404,7 +520,7 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 4: USER PHOTOS & VISUAL FOOTPRINT (AUTHENTIC & HONEST)
+          SECTION 5: USER PHOTOS & VISUAL FOOTPRINT (AUTHENTIC & HONEST)
          ========================================================================= */}
       {hasPhotos ? (
         <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-4">
@@ -501,9 +617,16 @@ export const NumberDossierPage: React.FC = () => {
               <span>No Public Profile Picture Indexed in Open Directories</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
-              Reverse search performed across open search engine indexes, Gravatar hashes, and authorized messaging endpoints. In accordance with platform privacy controls (e.g. WhatsApp / Telegram "My Contacts Only" settings) and Section 8 of the Indian Digital Personal Data Protection (DPDP) Act 2023, private subscriber photos are not publicly harvestable without authorized consent.
+              Reverse search performed across open search engine indexes, Gravatar hashes, and authorized messaging endpoints. Connect your Truecaller session above to fetch private/registered user profile pictures directly from Truecaller's directory.
             </p>
             <div className="pt-2 flex flex-wrap gap-2">
+              <button
+                onClick={() => setIsTcModalOpen(true)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-950 hover:bg-blue-900 border border-blue-800 text-blue-300 text-xs rounded-lg transition-colors font-mono"
+              >
+                <span>Connect Truecaller to Fetch Photo</span>
+                <Key className="w-3 h-3" />
+              </button>
               <a
                 href={`https://wa.me/${cleanDigits}`}
                 target="_blank"
@@ -513,22 +636,13 @@ export const NumberDossierPage: React.FC = () => {
                 <span>Check DP Directly in WhatsApp</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
-              <a
-                href={`https://www.google.com/search?tbm=isch&q=%22%2B${cleanDigits}%22`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg transition-colors font-mono"
-              >
-                <span>Search Google Images</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
             </div>
           </div>
         </div>
       )}
 
       {/* =========================================================================
-          SECTION 5: PUBLIC IDENTITY & BUSINESS RECORDS
+          SECTION 6: PUBLIC IDENTITY & BUSINESS RECORDS
          ========================================================================= */}
       <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-3">
         <h2 className="text-sm font-semibold text-white flex items-center space-x-2">
@@ -559,7 +673,7 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 6: SOCIAL MEDIA & MESSAGING DISCOVERY (9 PLATFORMS)
+          SECTION 7: SOCIAL MEDIA & MESSAGING DISCOVERY (9 PLATFORMS)
          ========================================================================= */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -585,7 +699,7 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 7: SPAM INTELLIGENCE & FORENSIC AI AGENT
+          SECTION 8: SPAM INTELLIGENCE & FORENSIC AI AGENT
          ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Spam Intelligence Card */}
@@ -669,8 +783,17 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          MODAL: FULL PHOTO INSPECTION LIGHTBOX
+          MODALS: TRUECALLER CONNECT & PHOTO INSPECTION
          ========================================================================= */}
+      <TruecallerModal
+        isOpen={isTcModalOpen}
+        onClose={() => setIsTcModalOpen(false)}
+        onConnected={() => {
+          setIsTruecallerConnected(true);
+          handleFetchTruecaller();
+        }}
+      />
+
       {activePhotoModal && (
         <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"

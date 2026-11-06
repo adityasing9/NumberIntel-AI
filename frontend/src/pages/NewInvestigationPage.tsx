@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { numberService } from '../services/api';
-import { Search, Globe, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { truecallerService } from '../services/truecallerService';
+import { TruecallerModal } from '../components/ui/TruecallerModal';
+import { Search, Globe, AlertCircle, Loader2, ArrowRight, Phone, CheckCircle2, Key } from 'lucide-react';
 
 const COUNTRIES = [
   { code: 'IN', name: 'India (+91)' },
@@ -22,6 +24,12 @@ export const NewInvestigationPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isTcModalOpen, setIsTcModalOpen] = useState(false);
+  const [isTruecallerConnected, setIsTruecallerConnected] = useState(false);
+
+  useEffect(() => {
+    setIsTruecallerConnected(!!truecallerService.getToken());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +52,42 @@ export const NewInvestigationPage: React.FC = () => {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-extrabold text-white tracking-tight">New Target Investigation</h1>
         <p className="text-xs text-slate-400 font-mono">
-          Execute single target phone number intelligence, telecom geocoding, and social footprint discovery.
+          Execute single target phone number intelligence, Truecaller directory lookups, and social footprint discovery.
         </p>
+      </div>
+
+      {/* Truecaller Gateway Status Bar */}
+      <div className="p-3.5 bg-gradient-to-r from-blue-950/70 via-slate-900 to-slate-900 border border-blue-900/50 rounded-2xl flex items-center justify-between text-xs font-mono">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-1.5 bg-blue-600 rounded-lg text-white">
+            <Phone className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-white font-bold flex items-center space-x-1.5">
+              <span>Truecaller Live Gateway</span>
+              {isTruecallerConnected && (
+                <span className="text-[10px] text-emerald-400 flex items-center space-x-1 font-semibold">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>ACTIVE</span>
+                </span>
+              )}
+            </div>
+            <div className="text-[10px] text-slate-400">
+              {isTruecallerConnected
+                ? 'Queries will pull real caller names, carrier networks, and photos from Truecaller.'
+                : 'Connect Truecaller via SMS OTP to fetch real caller names & profile pictures.'}
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsTcModalOpen(true)}
+          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] rounded-lg shadow transition-colors flex items-center space-x-1"
+        >
+          <Key className="w-3 h-3" />
+          <span>{isTruecallerConnected ? 'Manage' : 'Connect'}</span>
+        </button>
       </div>
 
       {errorMsg && (
@@ -114,7 +156,7 @@ export const NewInvestigationPage: React.FC = () => {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Investigating Across 12 Intelligence Feeds...</span>
+              <span>Investigating Across Truecaller & 12 Intelligence Feeds...</span>
             </>
           ) : (
             <>
@@ -124,6 +166,12 @@ export const NewInvestigationPage: React.FC = () => {
           )}
         </button>
       </form>
+
+      <TruecallerModal
+        isOpen={isTcModalOpen}
+        onClose={() => setIsTcModalOpen(false)}
+        onConnected={() => setIsTruecallerConnected(true)}
+      />
     </div>
   );
 };

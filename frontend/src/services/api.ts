@@ -21,6 +21,7 @@ import {
   resolveCarrier,
   resolveIdentity
 } from './localIntelligence';
+import { truecallerService } from './truecallerService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -388,6 +389,24 @@ export const numberService = {
     const carrierInfo = resolveCarrier(validNum.e164_format, validNum.country_iso2);
     const identityInfo = resolveIdentity(validNum.e164_format, validNum.country_iso2);
 
+    try {
+      const tc = await truecallerService.search(validNum.e164_format);
+      if (tc && tc.name) {
+        identityInfo.name = tc.name;
+        if (tc.carrier) carrierInfo.carrier = tc.carrier;
+        if (tc.city) carrierInfo.circle = tc.city;
+        if (tc.imageUrl) {
+          identityInfo.avatarUrl = tc.imageUrl;
+          identityInfo.photoSources = [{
+            platform: 'Truecaller',
+            url: tc.imageUrl,
+            label: 'Truecaller Verified Profile Picture'
+          }];
+        }
+        identityInfo.isBusiness = tc.isBusiness;
+      }
+    } catch (e) {}
+
     const item: BulkResultTableItem = {
       task_id: taskId,
       phone_number_id: `pn-${Date.now()}`,
@@ -403,8 +422,8 @@ export const numberService = {
       business_name: identityInfo.businessName,
       avatar_url: identityInfo.avatarUrl,
       user_handle: identityInfo.handle,
-      confidence_score: 92,
-      overall_status: identityInfo.isBusiness ? 'verified' : 'unindexed_private',
+      confidence_score: 95,
+      overall_status: identityInfo.isBusiness || (identityInfo.name && !identityInfo.name.includes('Private Subscriber')) ? 'verified' : 'unindexed_private',
       whatsapp_status: 'possible_public_match',
       telegram_status: 'not_publicly_verifiable',
       social_profiles_count: identityInfo.isBusiness ? 2 : 1,
@@ -424,7 +443,29 @@ export const numberService = {
         return res.data;
       }
     } catch (err) {}
-    return generateLocalDossier(taskId);
+
+    const dossier = generateLocalDossier(taskId);
+
+    try {
+      const tc = await truecallerService.search(dossier.e164_format);
+      if (tc && tc.name) {
+        dossier.public_name = tc.name;
+        if (tc.carrier) dossier.carrier_name = tc.carrier;
+        if (tc.city) dossier.carrier_circle = tc.city;
+        if (tc.imageUrl) {
+          dossier.avatar_url = tc.imageUrl;
+          dossier.photo_sources = [{
+            platform: 'Truecaller',
+            url: tc.imageUrl,
+            label: 'Truecaller Verified Profile Picture'
+          }];
+        }
+        dossier.overall_verification_status = 'verified';
+        dossier.summary = `Caller verified via Truecaller Gateway. Registered name: ${tc.name} (${tc.carrier || dossier.carrier_name}). Truecaller spam score: ${tc.spamScore || 0}.`;
+      }
+    } catch (e) {}
+
+    return dossier;
   },
 };
 
