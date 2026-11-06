@@ -152,23 +152,36 @@ class AIReportResponse(BaseModel):
 
 
 # ---------------- Full Report Dossier ----------------
+class PhotoSourceItem(BaseModel):
+    platform: str
+    url: str
+    label: str
+
+
 class FullNumberReportResponse(BaseModel):
     phone_number: str
     e164_format: str
-    national_format: Optional[str]
-    country_iso2: Optional[str]
-    country_code: Optional[str]
+    national_format: Optional[str] = None
+    country_iso2: Optional[str] = None
+    country_code: Optional[str] = None
     number_type: str
     is_valid: bool
-    carrier_name: Optional[str]
-    line_type: Optional[str]
+    carrier_name: Optional[str] = None
+    carrier_circle: Optional[str] = None
+    line_type: Optional[str] = None
     
     # Resolved identity
-    public_name: Optional[str]
-    business_name: Optional[str]
+    public_name: Optional[str] = None
+    business_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    user_handle: Optional[str] = None
+    bio: Optional[str] = None
+    location: Optional[str] = None
+    photo_sources: Optional[List[PhotoSourceItem]] = []
+
     confidence_score: float
     overall_verification_status: str
-    summary: Optional[str]
+    summary: Optional[str] = None
     
     # Category Breakdowns
     platforms: List[PlatformResultResponse] = []
@@ -222,9 +235,12 @@ class BulkResultTableItem(BaseModel):
     country_code: str
     number_type: str
     is_valid: bool
-    carrier_name: Optional[str]
-    public_name: Optional[str]
-    business_name: Optional[str]
+    carrier_name: Optional[str] = None
+    carrier_circle: Optional[str] = None
+    public_name: Optional[str] = None
+    business_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    user_handle: Optional[str] = None
     confidence_score: float
     overall_status: str
     whatsapp_status: str

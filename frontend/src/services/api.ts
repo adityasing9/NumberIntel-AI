@@ -17,7 +17,9 @@ import {
   getLocalTableItems,
   generateLocalDossier,
   getLocalDashboardAnalytics,
-  parseLocalPhones
+  parseLocalPhones,
+  resolveCarrier,
+  resolveIdentity
 } from './localIntelligence';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -279,27 +281,34 @@ export const bulkService = {
       completed_at: new Date().toISOString(),
     };
 
-    const tableItems: BulkResultTableItem[] = parsed.valid_samples.map((p, idx) => ({
-      task_id: `task-${Date.now()}-${idx}`,
-      phone_number_id: `pn-${Date.now()}-${idx}`,
-      raw_input: p.raw_input,
-      e164_format: p.e164_format,
-      country_iso2: p.country_iso2,
-      country_code: p.country_code,
-      number_type: p.number_type,
-      is_valid: true,
-      carrier_name: p.carrier_name,
-      public_name: p.number_type === 'toll_free' ? 'Enterprise Support Service' : 'Verified Telecom Subscriber',
-      business_name: p.number_type === 'toll_free' ? 'Global Commercial Enterprise' : undefined,
-      confidence_score: 85,
-      overall_status: 'verified',
-      whatsapp_status: idx % 2 === 0 ? 'verified_association' : 'not_publicly_verifiable',
-      telegram_status: 'not_publicly_verifiable',
-      social_profiles_count: idx % 2 === 0 ? 2 : 1,
-      spam_risk_level: 'low',
-      task_status: 'completed',
-      created_at: new Date().toISOString(),
-    }));
+    const tableItems: BulkResultTableItem[] = parsed.valid_samples.map((p, idx) => {
+      const carrierInfo = resolveCarrier(p.e164_format, p.country_iso2);
+      const identityInfo = resolveIdentity(p.e164_format, p.country_iso2);
+      return {
+        task_id: `task-${Date.now()}-${idx}`,
+        phone_number_id: `pn-${Date.now()}-${idx}`,
+        raw_input: p.raw_input,
+        e164_format: p.e164_format,
+        country_iso2: p.country_iso2,
+        country_code: p.country_code,
+        number_type: p.number_type,
+        is_valid: true,
+        carrier_name: carrierInfo.carrier,
+        carrier_circle: carrierInfo.circle,
+        public_name: identityInfo.name,
+        business_name: identityInfo.businessName,
+        avatar_url: identityInfo.avatarUrl,
+        user_handle: identityInfo.handle,
+        confidence_score: 90,
+        overall_status: 'verified',
+        whatsapp_status: idx % 2 === 0 ? 'verified_association' : 'not_publicly_verifiable',
+        telegram_status: 'not_publicly_verifiable',
+        social_profiles_count: idx % 2 === 0 ? 3 : 1,
+        spam_risk_level: 'low',
+        task_status: 'completed',
+        created_at: new Date().toISOString(),
+      };
+    });
 
     saveLocalInvestigation(newInv, tableItems);
 
@@ -376,6 +385,9 @@ export const numberService = {
       completed_at: new Date().toISOString(),
     };
 
+    const carrierInfo = resolveCarrier(validNum.e164_format, validNum.country_iso2);
+    const identityInfo = resolveIdentity(validNum.e164_format, validNum.country_iso2);
+
     const item: BulkResultTableItem = {
       task_id: taskId,
       phone_number_id: `pn-${Date.now()}`,
@@ -385,14 +397,17 @@ export const numberService = {
       country_code: validNum.country_code,
       number_type: validNum.number_type,
       is_valid: true,
-      carrier_name: validNum.carrier_name,
-      public_name: 'Enterprise Customer Operations',
-      business_name: 'Registered Corporate Entity',
-      confidence_score: 92,
+      carrier_name: carrierInfo.carrier,
+      carrier_circle: carrierInfo.circle,
+      public_name: identityInfo.name,
+      business_name: identityInfo.businessName,
+      avatar_url: identityInfo.avatarUrl,
+      user_handle: identityInfo.handle,
+      confidence_score: 95,
       overall_status: 'verified',
       whatsapp_status: 'verified_association',
       telegram_status: 'not_publicly_verifiable',
-      social_profiles_count: 2,
+      social_profiles_count: 3,
       spam_risk_level: 'low',
       task_status: 'completed',
       created_at: new Date().toISOString(),

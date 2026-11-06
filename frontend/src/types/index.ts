@@ -77,8 +77,11 @@ export interface BulkResultTableItem {
   number_type: string;
   is_valid: boolean;
   carrier_name?: string;
+  carrier_circle?: string;
   public_name?: string;
   business_name?: string;
+  avatar_url?: string;
+  user_handle?: string;
   confidence_score: number;
   overall_status: string;
   whatsapp_status: string;
@@ -148,6 +151,12 @@ export interface AIReport {
   created_at: string;
 }
 
+export interface PhotoSource {
+  platform: string;
+  url: string;
+  label: string;
+}
+
 export interface FullNumberReportResponse {
   phone_number: string;
   e164_format: string;
@@ -157,9 +166,15 @@ export interface FullNumberReportResponse {
   number_type: string;
   is_valid: boolean;
   carrier_name?: string;
+  carrier_circle?: string;
   line_type?: string;
   public_name?: string;
   business_name?: string;
+  avatar_url?: string;
+  user_handle?: string;
+  bio?: string;
+  location?: string;
+  photo_sources?: PhotoSource[];
   confidence_score: number;
   overall_verification_status: string;
   summary?: string;

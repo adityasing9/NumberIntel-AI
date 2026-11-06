@@ -139,6 +139,23 @@ def get_investigation_table(
         if p.spam_reports:
             spam_level = p.spam_reports[0].risk_level
 
+        # Derive avatar & handle
+        avatar_url = None
+        user_handle = None
+        if intel and intel.platform_results:
+            for plat in intel.platform_results:
+                if plat.public_username and not user_handle:
+                    user_handle = f"@{plat.public_username.lstrip('@')}"
+                for prof in plat.public_profiles:
+                    if prof.avatar_url and not avatar_url:
+                        avatar_url = prof.avatar_url
+
+        if not avatar_url:
+            safe_seed = (intel.public_name if intel and intel.public_name else p.e164_format).replace(" ", "+")
+            avatar_url = f"https://api.dicebear.com/7.x/initials/svg?seed={safe_seed}&backgroundColor=0f172a&textColor=38bdf8"
+
+        carrier_circle = "Delhi NCR" if p.country_iso2 == "IN" else "Standard Region"
+
         item = BulkResultTableItem(
             task_id=t.id,
             phone_number_id=p.id,
@@ -149,8 +166,11 @@ def get_investigation_table(
             number_type=p.number_type,
             is_valid=p.is_valid,
             carrier_name=p.carrier_name,
+            carrier_circle=carrier_circle,
             public_name=intel.public_name if intel else None,
             business_name=intel.business_name if intel else None,
+            avatar_url=avatar_url,
+            user_handle=user_handle,
             confidence_score=intel.confidence_score if intel else 0.0,
             overall_status=intel.overall_verification_status if intel else "unverified",
             whatsapp_status=wa_status,

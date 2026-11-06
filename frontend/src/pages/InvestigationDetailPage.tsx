@@ -244,20 +244,42 @@ export const InvestigationDetailPage: React.FC = () => {
                       <span className="text-slate-500 ml-1">(+{item.country_code})</span>
                     </td>
                     <td className="p-3">
-                      <div className="text-slate-200">{item.carrier_name || 'Allocated Network'}</div>
+                      <div className="text-slate-200 font-semibold">{item.carrier_name || 'Allocated Network'}</div>
+                      <div className="text-[10px] text-cyan-400">{item.carrier_circle || 'National Region'}</div>
                       <div className="text-[10px] text-slate-500 capitalize">{item.number_type.replace('_', ' ')}</div>
                     </td>
-                    <td className="p-3 font-sans">
-                      {item.business_name || item.public_name ? (
-                        <div>
-                          <div className="font-medium text-slate-100">{item.business_name || item.public_name}</div>
-                          {item.business_name && item.public_name && (
-                            <div className="text-[11px] text-slate-400">{item.public_name}</div>
+                    <td className="p-3">
+                      <div className="flex items-center space-x-2.5">
+                        {item.avatar_url ? (
+                          <img
+                            src={item.avatar_url}
+                            alt={item.public_name || 'Avatar'}
+                            className="w-8 h-8 rounded-lg object-cover border border-cyan-500/40 bg-slate-950 flex-shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(item.public_name || item.e164_format)}&backgroundColor=0f172a&textColor=38bdf8`;
+                            }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-cyan-400 font-mono text-[10px] font-bold flex-shrink-0">
+                            {(item.public_name || item.e164_format).slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          {item.business_name || item.public_name ? (
+                            <div>
+                              <div className="font-medium text-slate-100 truncate">{item.public_name || item.business_name}</div>
+                              {item.user_handle && (
+                                <div className="text-[10px] text-cyan-400 font-mono truncate">{item.user_handle}</div>
+                              )}
+                              {item.business_name && item.public_name && (
+                                <div className="text-[10px] text-slate-400 truncate">{item.business_name}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-600 font-mono text-[11px]">Unindexed / Private</span>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-slate-600 font-mono text-[11px]">Unindexed / Private</span>
-                      )}
+                      </div>
                     </td>
                     <td className="p-3">
                       <StatusBadge status={item.whatsapp_status} size="sm" />

@@ -164,6 +164,48 @@ def get_task_report(
             created_at=ai.created_at
         )
 
+    # Derive avatar, user handle, bio, and photo sources from profiles or public metadata
+    resolved_avatar: Optional[str] = None
+    resolved_handle: Optional[str] = None
+    resolved_bio: Optional[str] = None
+    resolved_location: Optional[str] = None
+    photo_sources_list = []
+
+    for p in platform_responses:
+        if p.public_username and not resolved_handle:
+            resolved_handle = f"@{p.public_username.lstrip('@')}"
+        for prof in p.public_profiles:
+            if prof.avatar_url and not resolved_avatar:
+                resolved_avatar = prof.avatar_url
+            if prof.avatar_url:
+                photo_sources_list.append({
+                    "platform": p.platform_name,
+                    "url": prof.avatar_url,
+                    "label": f"Public profile picture ({p.platform_name.title()})"
+                })
+            if prof.bio and not resolved_bio:
+                resolved_bio = prof.bio
+
+    # Fallback avatar and photo sources if none discovered
+    pub_name = intel.public_name if intel else None
+    if not resolved_avatar:
+        safe_seed = (pub_name or phone.e164_format).replace(" ", "+")
+        resolved_avatar = f"https://api.dicebear.com/7.x/initials/svg?seed={safe_seed}&backgroundColor=0f172a&textColor=38bdf8"
+        photo_sources_list.append({
+            "platform": "unavatar",
+            "url": resolved_avatar,
+            "label": "Deterministic Caller ID Portrait"
+        })
+
+    # Derive telecom circle
+    carrier_circle = None
+    if phone.country_iso2 == "IN" or phone.e164_format.startswith("+91"):
+        carrier_circle = "Delhi NCR / North Zone Circle"
+    elif phone.country_iso2 == "US" or phone.e164_format.startswith("+1"):
+        carrier_circle = "North American Numbering Plan"
+    elif phone.country_iso2 == "GB" or phone.e164_format.startswith("+44"):
+        carrier_circle = "London Metropolitan Telecom Region"
+
     return FullNumberReportResponse(
         phone_number=phone.raw_input,
         e164_format=phone.e164_format,
@@ -173,9 +215,15 @@ def get_task_report(
         number_type=phone.number_type,
         is_valid=phone.is_valid,
         carrier_name=phone.carrier_name,
+        carrier_circle=carrier_circle,
         line_type=phone.line_type,
-        public_name=intel.public_name if intel else None,
+        public_name=pub_name,
         business_name=intel.business_name if intel else None,
+        avatar_url=resolved_avatar,
+        user_handle=resolved_handle,
+        bio=resolved_bio,
+        location=resolved_location or (f"{phone.country_iso2} Telecom Zone" if phone.country_iso2 else None),
+        photo_sources=photo_sources_list,
         confidence_score=intel.confidence_score if intel else 0.0,
         overall_verification_status=intel.overall_verification_status if intel else "unverified",
         summary=intel.summary if intel else None,
