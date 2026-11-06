@@ -23,7 +23,10 @@ import {
   CheckCircle2,
   Globe,
   Camera,
-  Layers
+  Layers,
+  Search,
+  Lock,
+  MessageSquare
 } from 'lucide-react';
 
 export const NumberDossierPage: React.FC = () => {
@@ -55,7 +58,7 @@ export const NumberDossierPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4 text-cyan-400 font-mono">
         <RefreshCw className="w-8 h-8 animate-spin" />
-        <span className="text-sm">Compiling Forensic Intelligence Dossier & Resolving Digital Footprint...</span>
+        <span className="text-sm">Compiling Forensic Intelligence Dossier & Validating Telecom Metadata...</span>
       </div>
     );
   }
@@ -76,8 +79,10 @@ export const NumberDossierPage: React.FC = () => {
     );
   }
 
+  const cleanDigits = report.e164_format.replace(/\D/g, '');
   const primaryAvatar = report.avatar_url || (report.photo_sources && report.photo_sources[0]?.url);
   const hasPhotos = (report.photo_sources && report.photo_sources.length > 0) || !!primaryAvatar;
+  const isPrivateSubscriber = !report.business_name && (report.public_name?.includes('Private Subscriber') || report.overall_verification_status === 'unindexed_private');
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
@@ -104,33 +109,33 @@ export const NumberDossierPage: React.FC = () => {
           SECTION 1: USER IDENTITY & PROFILE HERO SHOWCASE (NAME, AVATAR, PROFILE)
          ========================================================================= */}
       <div className="relative bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-950 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl overflow-hidden">
-        {/* Ambient Glow in background */}
+        {/* Ambient Glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           {/* Left: Avatar + User Name & Bio */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            {/* User Avatar with Hover Zoom & Badge */}
+            {/* User Avatar Card */}
             <div className="relative group flex-shrink-0">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-cyan-500/60 shadow-xl shadow-cyan-950/60 bg-slate-950 flex items-center justify-center relative">
                 {primaryAvatar ? (
                   <img
                     src={primaryAvatar}
-                    alt={report.public_name || 'User Profile Photo'}
+                    alt={report.public_name || 'Verified Entity Logo'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      // Fallback if image fails
                       (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(report.public_name || report.e164_format)}&backgroundColor=0f172a&textColor=38bdf8`;
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-cyan-400 font-mono font-bold text-2xl">
-                    <User className="w-10 h-10 text-slate-600 mb-1" />
-                    <span>{(report.public_name || report.e164_format).slice(0, 2).toUpperCase()}</span>
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950 text-cyan-400 font-mono text-center p-2">
+                    <Radio className="w-8 h-8 text-cyan-400 mb-1" />
+                    <span className="text-[10px] font-bold tracking-wider text-slate-300 uppercase">{report.country_iso2 || 'INTL'}</span>
+                    <span className="text-[9px] text-slate-500 truncate max-w-[84px]">{report.carrier_name?.split(' ')[0] || 'Mobile'}</span>
                   </div>
                 )}
 
-                {/* Click to enlarge overlay */}
+                {/* Click to enlarge overlay if photo exists */}
                 {primaryAvatar && (
                   <button
                     onClick={() => setActivePhotoModal(primaryAvatar)}
@@ -152,11 +157,15 @@ export const NumberDossierPage: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2.5">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  {report.public_name || 'Public Entity Unindexed'}
+                  {report.business_name || (isPrivateSubscriber ? 'Private Individual Subscriber' : (report.public_name || 'Unindexed Subscriber'))}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-800 flex items-center space-x-1">
-                  <CheckCircle2 className="w-3 h-3 text-cyan-400" />
-                  <span>Publicly Identified</span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold flex items-center space-x-1 ${
+                  report.business_name
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+                    : 'bg-slate-950 text-cyan-400 border border-slate-700'
+                }`}>
+                  <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>{report.business_name ? 'Verified Commercial Entity' : 'Protected Subscriber (DPDP Act 2023)'}</span>
                 </span>
               </div>
 
@@ -174,20 +183,16 @@ export const NumberDossierPage: React.FC = () => {
                     <span>{report.business_name}</span>
                   </span>
                 )}
-                {report.location && (
-                  <span className="text-slate-400 flex items-center space-x-1">
-                    <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                    <span>{report.location}</span>
-                  </span>
-                )}
+                <span className="text-slate-300 flex items-center space-x-1">
+                  <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{report.carrier_circle || report.location || 'National Region'}</span>
+                </span>
               </div>
 
               {/* Bio / Description */}
-              {report.bio && (
-                <p className="text-xs text-slate-300 max-w-xl font-sans leading-relaxed pt-1 border-t border-slate-800/80">
-                  {report.bio}
-                </p>
-              )}
+              <p className="text-xs text-slate-300 max-w-xl font-sans leading-relaxed pt-1 border-t border-slate-800/80">
+                {report.bio || report.summary}
+              </p>
 
               {/* E164 and Country Quick Badges */}
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-mono">
@@ -197,28 +202,136 @@ export const NumberDossierPage: React.FC = () => {
                 <span className="text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                   Country: <strong className="text-white">{report.country_iso2} (+{report.country_code})</strong>
                 </span>
+                <span className="text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                  Network: <strong className="text-cyan-300">{report.carrier_name}</strong>
+                </span>
               </div>
             </div>
           </div>
 
           {/* Right: Confidence Score & Verification Badge */}
           <div className="flex flex-col items-start lg:items-end justify-center p-4 bg-slate-950/80 border border-slate-800 rounded-xl min-w-[180px] font-mono shadow-inner">
-            <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Confidence Rating</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Technical Confidence</div>
             <div className={`text-3xl font-extrabold mt-0.5 ${report.confidence_score >= 70 ? 'text-emerald-400' : 'text-cyan-400'}`}>
               {report.confidence_score.toFixed(0)}%
             </div>
             <div className="text-[11px] font-semibold text-slate-300 mt-1 uppercase tracking-wide">
-              {report.overall_verification_status.replace('_', ' ')}
+              {report.is_valid ? 'ITU E.164 ROUTEABLE' : 'INVALID ROUTING'}
             </div>
             <div className="text-[10px] text-slate-500 mt-0.5">
-              Source Attribution Verified
+              TRAI & ITU Allocation Validated
             </div>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          SECTION 2: CARRIER & TELECOM NETWORK INTELLIGENCE
+          SECTION 2: LIVE OSINT INVESTIGATION TOOLKIT (ONE-CLICK REAL VERIFICATION)
+         ========================================================================= */}
+      <div className="bg-slate-900/90 rounded-xl border border-cyan-900/40 p-5 space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-sm font-semibold text-white">Live OSINT Investigation Toolkit</h2>
+          </div>
+          <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/70 border border-cyan-800 px-2.5 py-0.5 rounded">
+            Interactive Verification Gateways
+          </span>
+        </div>
+        <p className="text-xs text-slate-400">
+          Execute external, legal verification checks using official platform endpoints and search engine dorks for target <strong className="text-slate-200">{report.e164_format}</strong>.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+          {/* WhatsApp Direct */}
+          <a
+            href={`https://wa.me/${cleanDigits}`}
+            target="_blank"
+            rel="noreferrer"
+            className="p-3 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-xl transition-all group flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between text-emerald-400 mb-2">
+              <MessageSquare className="w-4 h-4" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-emerald-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-200 group-hover:text-emerald-300">WhatsApp Profile</div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">Check Live DP & About</div>
+            </div>
+          </a>
+
+          {/* Telegram Direct */}
+          <a
+            href={`https://t.me/+${cleanDigits}`}
+            target="_blank"
+            rel="noreferrer"
+            className="p-3 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-sky-500/50 rounded-xl transition-all group flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between text-sky-400 mb-2">
+              <Share2 className="w-4 h-4" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-sky-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-200 group-hover:text-sky-300">Telegram Check</div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">Inspect open t.me route</div>
+            </div>
+          </a>
+
+          {/* Truecaller Web Search */}
+          <a
+            href={`https://www.truecaller.com/search/in/${cleanDigits}`}
+            target="_blank"
+            rel="noreferrer"
+            className="p-3 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-cyan-500/50 rounded-xl transition-all group flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between text-cyan-400 mb-2">
+              <Phone className="w-4 h-4" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-cyan-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-200 group-hover:text-cyan-300">Truecaller Web</div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">Official caller registry</div>
+            </div>
+          </a>
+
+          {/* Google Dork Exact Query */}
+          <a
+            href={`https://www.google.com/search?q=%22%2B${cleanDigits}%22`}
+            target="_blank"
+            rel="noreferrer"
+            className="p-3 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-xl transition-all group flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between text-amber-400 mb-2">
+              <Globe className="w-4 h-4" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-amber-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-200 group-hover:text-amber-300">Google Exact Dork</div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">Search indexed websites</div>
+            </div>
+          </a>
+
+          {/* DuckDuckGo Search */}
+          <a
+            href={`https://duckduckgo.com/?q=%22%2B${cleanDigits}%22`}
+            target="_blank"
+            rel="noreferrer"
+            className="p-3 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-purple-500/50 rounded-xl transition-all group flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between text-purple-400 mb-2">
+              <Search className="w-4 h-4" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-purple-400" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-200 group-hover:text-purple-300">DuckDuckGo</div>
+              <div className="text-[10px] text-slate-500 font-mono mt-0.5">Unfiltered web citations</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          SECTION 3: CARRIER & TELECOM NETWORK INTELLIGENCE (TRAI & ITU-T ACCURATE)
          ========================================================================= */}
       <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -227,7 +340,7 @@ export const NumberDossierPage: React.FC = () => {
             <span>Allocated Carrier & Telecom Infrastructure Metadata</span>
           </h2>
           <span className="text-[11px] font-mono text-slate-400 bg-slate-950 px-2.5 py-0.5 rounded border border-slate-800">
-            ITU E.164 & National LRN Validated
+            TRAI & ITU-T E.164 Validated
           </span>
         </div>
 
@@ -242,7 +355,7 @@ export const NumberDossierPage: React.FC = () => {
               {report.carrier_name || 'Allocated Network'}
             </div>
             <div className="text-[10px] text-slate-400">
-              Primary Telecom Carrier
+              Licensed Telecom Service Provider
             </div>
           </div>
 
@@ -256,7 +369,7 @@ export const NumberDossierPage: React.FC = () => {
               {report.carrier_circle || 'National Region'}
             </div>
             <div className="text-[10px] text-slate-400">
-              Originating Telecom LRN Region
+              DoT Allocation Service Area
             </div>
           </div>
 
@@ -291,9 +404,9 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 3: USER PHOTOS & DIGITAL ASSET DISCOVERY GALLERY
+          SECTION 4: USER PHOTOS & VISUAL FOOTPRINT (AUTHENTIC & HONEST)
          ========================================================================= */}
-      {hasPhotos && (
+      {hasPhotos ? (
         <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <div>
@@ -302,7 +415,7 @@ export const NumberDossierPage: React.FC = () => {
                 <span>Discovered User Photos & Visual Footprint</span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Public profile portraits collected from authorized gateways, messaging apps, and publicly indexed directories.
+                Public profile portraits collected from authorized gateways and indexed corporate directories.
               </p>
             </div>
             <span className="text-xs font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800 px-2.5 py-0.5 rounded">
@@ -371,10 +484,51 @@ export const NumberDossierPage: React.FC = () => {
             ) : null}
           </div>
         </div>
+      ) : (
+        <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <h2 className="text-sm font-semibold text-white flex items-center space-x-2">
+              <Camera className="w-4 h-4 text-cyan-400" />
+              <span>Public Photo & Avatar Intelligence</span>
+            </h2>
+            <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+              0 Public Images Found
+            </span>
+          </div>
+          <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs font-mono text-slate-400 space-y-2">
+            <div className="flex items-center space-x-2 text-slate-200 font-semibold">
+              <Lock className="w-4 h-4 text-cyan-400" />
+              <span>No Public Profile Picture Indexed in Open Directories</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+              Reverse search performed across open search engine indexes, Gravatar hashes, and authorized messaging endpoints. In accordance with platform privacy controls (e.g. WhatsApp / Telegram "My Contacts Only" settings) and Section 8 of the Indian Digital Personal Data Protection (DPDP) Act 2023, private subscriber photos are not publicly harvestable without authorized consent.
+            </p>
+            <div className="pt-2 flex flex-wrap gap-2">
+              <a
+                href={`https://wa.me/${cleanDigits}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 text-xs rounded-lg transition-colors font-mono"
+              >
+                <span>Check DP Directly in WhatsApp</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <a
+                href={`https://www.google.com/search?tbm=isch&q=%22%2B${cleanDigits}%22`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg transition-colors font-mono"
+              >
+                <span>Search Google Images</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* =========================================================================
-          SECTION 4: PUBLIC IDENTITY & BUSINESS RECORDS
+          SECTION 5: PUBLIC IDENTITY & BUSINESS RECORDS
          ========================================================================= */}
       <div className="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-3">
         <h2 className="text-sm font-semibold text-white flex items-center space-x-2">
@@ -385,10 +539,10 @@ export const NumberDossierPage: React.FC = () => {
           <div className="p-3.5 bg-slate-950/60 rounded-lg border border-slate-800 space-y-1">
             <div className="text-slate-500 font-mono uppercase text-[10px]">Public / Caller Entity Name</div>
             <div className="text-base font-semibold text-slate-100 font-sans">
-              {report.public_name || 'Not publicly indexed in lawful caller registries'}
+              {report.business_name || (isPrivateSubscriber ? 'Private Individual Subscriber' : (report.public_name || 'Unindexed Subscriber'))}
             </div>
             <div className="text-[10px] text-slate-500 font-mono">
-              Attribution: Official business listings & public search indices
+              Attribution: {report.business_name ? 'Official business listings' : 'Protected under Indian DPDP Act 2023'}
             </div>
           </div>
 
@@ -398,14 +552,14 @@ export const NumberDossierPage: React.FC = () => {
               {report.business_name || 'No corporate directory listing mapped'}
             </div>
             <div className="text-[10px] text-slate-500 font-mono">
-              Attribution: Google Business / MCA / Authorized Web Mentions
+              Attribution: MCA / Google Business / Corporate Registries
             </div>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          SECTION 5: SOCIAL MEDIA & MESSAGING DISCOVERY (9 PLATFORMS)
+          SECTION 6: SOCIAL MEDIA & MESSAGING DISCOVERY (9 PLATFORMS)
          ========================================================================= */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -431,7 +585,7 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 6: SPAM INTELLIGENCE & FORENSIC AI AGENT
+          SECTION 7: SPAM INTELLIGENCE & FORENSIC AI AGENT
          ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Spam Intelligence Card */}
@@ -466,7 +620,7 @@ export const NumberDossierPage: React.FC = () => {
             </div>
           ) : (
             <div className="p-4 bg-slate-950/50 rounded-lg border border-slate-800 text-xs text-slate-400 font-mono">
-              No reports found in Open Threat Feeds, StopForumSpam, or Spamhaus databases.
+              No abusive reports found across Open Threat Feeds, StopForumSpam, or Spamhaus databases.
             </div>
           )}
         </div>
@@ -502,7 +656,7 @@ export const NumberDossierPage: React.FC = () => {
 
             {report.ai_report?.missing_information && report.ai_report.missing_information.length > 0 && (
               <div className="pt-2">
-                <div className="text-[11px] text-purple-400 font-bold mb-1">? Protected / Unverified Attributes:</div>
+                <div className="text-[11px] text-purple-400 font-bold mb-1">? Protected Attributes (DPDP Compliant):</div>
                 <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
                   {report.ai_report.missing_information.map((m, i) => (
                     <li key={i}>{m}</li>

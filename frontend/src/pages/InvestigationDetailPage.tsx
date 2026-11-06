@@ -261,15 +261,21 @@ export const InvestigationDetailPage: React.FC = () => {
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-cyan-400 font-mono text-[10px] font-bold flex-shrink-0">
-                            {(item.public_name || item.e164_format).slice(0, 2).toUpperCase()}
+                            {item.country_iso2 || 'TEL'}
                           </div>
                         )}
                         <div className="min-w-0">
                           {item.business_name || item.public_name ? (
                             <div>
-                              <div className="font-medium text-slate-100 truncate">{item.public_name || item.business_name}</div>
-                              {item.user_handle && (
+                              <div className="font-medium text-slate-100 truncate">
+                                {item.business_name || (item.public_name?.includes('Private Subscriber') ? 'Private Subscriber Line' : item.public_name)}
+                              </div>
+                              {item.user_handle ? (
                                 <div className="text-[10px] text-cyan-400 font-mono truncate">{item.user_handle}</div>
+                              ) : (
+                                <div className="text-[10px] text-slate-500 font-mono truncate">
+                                  {item.business_name ? 'Verified Commercial' : 'Protected (DPDP Act)'}
+                                </div>
                               )}
                               {item.business_name && item.public_name && (
                                 <div className="text-[10px] text-slate-400 truncate">{item.business_name}</div>
