@@ -22,6 +22,7 @@ import {
   resolveIdentity
 } from './localIntelligence';
 import { truecallerService } from './truecallerService';
+import { freeOsintService } from './freeOsintService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -389,6 +390,30 @@ export const numberService = {
     const carrierInfo = resolveCarrier(validNum.e164_format, validNum.country_iso2);
     const identityInfo = resolveIdentity(validNum.e164_format, validNum.country_iso2);
 
+    // Free Internet OSINT Reconnaissance (Zero login / Zero cost)
+    try {
+      const freeData = await freeOsintService.lookup(validNum.e164_format, validNum.country_iso2);
+      if (freeData) {
+        if (freeData.name) {
+          identityInfo.name = freeData.name;
+        }
+        if (freeData.businessName) {
+          identityInfo.businessName = freeData.businessName;
+          identityInfo.isBusiness = true;
+        }
+        if (freeData.carrier) {
+          carrierInfo.carrier = freeData.carrier;
+        }
+        if (freeData.circle) {
+          carrierInfo.circle = freeData.circle;
+        }
+        if (freeData.avatarUrl) {
+          identityInfo.avatarUrl = freeData.avatarUrl;
+          identityInfo.photoSources = freeData.photoSources || [];
+        }
+      }
+    } catch (e) {}
+
     try {
       const tc = await truecallerService.search(validNum.e164_format);
       if (tc && tc.name) {
@@ -446,6 +471,78 @@ export const numberService = {
 
     const dossier = generateLocalDossier(taskId);
 
+    // 1. Enrich with Free Internet OSINT (Live DuckDuckGo, Tellows, Unavatar)
+    try {
+      const freeData = await freeOsintService.lookup(dossier.e164_format, dossier.country_iso2);
+      if (freeData) {
+        if (freeData.name) {
+          dossier.public_name = freeData.name;
+          dossier.overall_verification_status = 'verified';
+        }
+        if (freeData.businessName) {
+          dossier.business_name = freeData.businessName;
+          dossier.overall_verification_status = 'verified';
+        }
+        if (freeData.carrier) {
+          dossier.carrier_name = freeData.carrier;
+        }
+        if (freeData.circle) {
+          dossier.carrier_circle = freeData.circle;
+        }
+        if (freeData.avatarUrl) {
+          dossier.avatar_url = freeData.avatarUrl;
+          dossier.photo_sources = [
+            ...(freeData.photoSources || []),
+            ...(dossier.photo_sources || [])
+          ];
+        }
+        if (freeData.webSnippets && freeData.webSnippets.length > 0) {
+          dossier.web_snippets = freeData.webSnippets;
+        }
+        if (freeData.sources && freeData.sources.length > 0) {
+          dossier.free_osint_sources = freeData.sources;
+        }
+        if (freeData.summary) {
+          dossier.summary = freeData.summary;
+        }
+        if (freeData.socialProfiles && freeData.socialProfiles.length > 0) {
+          freeData.socialProfiles.forEach((sp, idx) => {
+            const existing = dossier.platforms.find(p => p.platform_name.toLowerCase() === sp.platform.toLowerCase());
+            if (existing) {
+              existing.verification_status = 'verified_association';
+              existing.profile_url = sp.url;
+              existing.public_display_name = sp.title;
+            } else {
+              dossier.platforms.push({
+                id: `sp-osint-${idx}`,
+                platform_name: sp.platform,
+                verification_status: 'verified_association',
+                profile_url: sp.url,
+                public_display_name: sp.title,
+                is_business: !!freeData.isBusiness,
+                confidence_level: 90,
+                checked_at: new Date().toISOString(),
+                evidence_records: [{
+                  id: `ev-sp-${idx}`,
+                  source_url: sp.url,
+                  snippet: sp.title,
+                  evidence_type: 'open_web_profile',
+                  retrieved_at: new Date().toISOString()
+                }],
+                public_profiles: [{
+                  id: `pp-sp-${idx}`,
+                  profile_identifier: sp.title,
+                  avatar_url: freeData.avatarUrl,
+                  has_verified_badge: false
+                }]
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {}
+
+    // 2. Optional Truecaller lookup (if authenticated session exists)
     try {
       const tc = await truecallerService.search(dossier.e164_format);
       if (tc && tc.name) {

@@ -14,6 +14,7 @@ from app.services.normalizer_service import phone_normalizer
 from app.providers.carrier.libphonenumber_adapter import LibphonenumberCarrierAdapter
 from app.providers.carrier.numverify_adapter import NumverifyAdapter
 from app.providers.osint.google_cse_adapter import GoogleCSEAdapter
+from app.providers.free_osint_provider import FreeInternetOSINTProvider
 from app.providers.social.social_adapters import get_all_social_adapters
 from app.providers.spam.spam_adapters import StopForumSpamAdapter, InternalDatabaseSpamChecker
 from app.services.ai_agent_service import ai_agent
@@ -24,6 +25,7 @@ class IntelligenceOrchestrator:
         self.carrier_lib = LibphonenumberCarrierAdapter()
         self.numverify = NumverifyAdapter()
         self.google_cse = GoogleCSEAdapter()
+        self.free_osint = FreeInternetOSINTProvider()
         self.social_adapters = get_all_social_adapters()
         self.stopforumspam = StopForumSpamAdapter()
 
@@ -56,8 +58,9 @@ class IntelligenceOrchestrator:
             # 1. Run Carrier Adapters
             carrier_res = await self.carrier_lib.lookup(normalized)
             
-            # 2. Run OSINT Search Engine
+            # 2. Run OSINT Search Engine & Free Internet Recon
             osint_res = await self.google_cse.lookup(normalized)
+            free_osint_res = await self.free_osint.lookup(normalized)
 
             # 3. Run Social Adapters concurrently
             social_tasks = [adapter.lookup(normalized) for adapter in self.social_adapters.values()]
@@ -68,15 +71,18 @@ class IntelligenceOrchestrator:
             internal_spam = InternalDatabaseSpamChecker.check_spam_records(db, phone_record.id)
 
             # Build IntelligenceResult record
-            resolved_business = osint_res.business_name if osint_res.success else None
-            resolved_name = osint_res.public_name if osint_res.success else None
+            resolved_business = (osint_res.business_name if osint_res.success else None) or free_osint_res.business_name
+            resolved_name = (osint_res.public_name if osint_res.success else None) or free_osint_res.public_name
+            
+            if free_osint_res.metadata.get("carrier") and not phone_record.carrier_name:
+                phone_record.carrier_name = free_osint_res.metadata.get("carrier")
 
             intel_result = IntelligenceResult(
                 lookup_task_id=task.id,
                 public_name=resolved_name,
                 business_name=resolved_business,
-                confidence_score=carrier_res.confidence_level,
-                overall_verification_status="verified" if (normalized.is_valid and (carrier_res.is_business or resolved_business)) else "clean",
+                confidence_score=max(carrier_res.confidence_level, free_osint_res.confidence_level),
+                overall_verification_status="verified" if (normalized.is_valid and (carrier_res.is_business or resolved_business or resolved_name)) else "clean",
                 summary=f"Processed across 12 intelligence feeds. Validity: {normalized.is_valid}."
             )
             db.add(intel_result)

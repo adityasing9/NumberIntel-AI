@@ -175,6 +175,8 @@ export interface FullNumberReportResponse {
   bio?: string;
   location?: string;
   photo_sources?: PhotoSource[];
+  web_snippets?: Array<{ title: string; snippet: string; url: string }>;
+  free_osint_sources?: string[];
   confidence_score: number;
   overall_verification_status: string;
   summary?: string;

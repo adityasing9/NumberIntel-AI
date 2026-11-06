@@ -5,6 +5,7 @@ import { FullNumberReportResponse, PhotoSource } from '../types';
 import { PlatformCard } from '../components/ui/PlatformCard';
 import { TruecallerModal } from '../components/ui/TruecallerModal';
 import { truecallerService } from '../services/truecallerService';
+import { freeOsintService } from '../services/freeOsintService';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -38,6 +39,10 @@ export const NumberDossierPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activePhotoModal, setActivePhotoModal] = useState<string | null>(null);
+
+  // Free OSINT States
+  const [osintLoading, setOsintLoading] = useState(false);
+  const [osintMessage, setOsintMessage] = useState<string | null>(null);
 
   // Truecaller States
   const [isTcModalOpen, setIsTcModalOpen] = useState(false);
@@ -103,6 +108,42 @@ export const NumberDossierPage: React.FC = () => {
       setIsTcModalOpen(true);
     } finally {
       setTcLoading(false);
+    }
+  };
+
+  const handleRunFreeOsint = async () => {
+    if (!report) return;
+    setOsintLoading(true);
+    setOsintMessage('Scanning free open internet indices, Tellows anti-spam registry, and search engines...');
+    try {
+      const freeData = await freeOsintService.lookup(report.e164_format, report.country_iso2);
+      if (freeData) {
+        setReport((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            public_name: freeData.name || prev.public_name,
+            business_name: freeData.businessName || prev.business_name,
+            carrier_name: freeData.carrier || prev.carrier_name,
+            carrier_circle: freeData.circle || prev.carrier_circle,
+            avatar_url: freeData.avatarUrl || prev.avatar_url,
+            photo_sources: freeData.photoSources && freeData.photoSources.length > 0
+              ? [...freeData.photoSources, ...(prev.photo_sources || [])]
+              : prev.photo_sources,
+            web_snippets: freeData.webSnippets || prev.web_snippets,
+            free_osint_sources: freeData.sources || prev.free_osint_sources,
+            summary: freeData.summary || prev.summary,
+            overall_verification_status: freeData.name || freeData.businessName ? 'verified' : prev.overall_verification_status,
+          };
+        });
+        setOsintMessage(`✓ Free Internet Recon complete! Found ${freeData.webSnippets?.length || 0} web mentions across ${freeData.sources?.length || 1} public sources.`);
+      } else {
+        setOsintMessage('Free internet scan complete. Number is private or unindexed in public web directories.');
+      }
+    } catch (err: any) {
+      setOsintMessage('Free internet scan note: ' + (err.message || 'Offline mode'));
+    } finally {
+      setOsintLoading(false);
     }
   };
 
@@ -209,15 +250,15 @@ export const NumberDossierPage: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2.5">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  {report.business_name || (isPrivateSubscriber ? 'Private Individual Subscriber' : (report.public_name || 'Unindexed Subscriber'))}
+                  {report.business_name || (report.public_name && !report.public_name.includes('Private Subscriber') ? report.public_name : (isPrivateSubscriber ? 'Private Individual Subscriber' : (report.public_name || 'Unindexed Subscriber')))}
                 </h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold flex items-center space-x-1 ${
-                  report.business_name
+                  report.business_name || (report.public_name && !report.public_name.includes('Private Subscriber'))
                     ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
                     : 'bg-slate-950 text-cyan-400 border border-slate-700'
                 }`}>
                   <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>{report.business_name ? 'Verified Commercial Entity' : 'Protected Subscriber (DPDP Act 2023)'}</span>
+                  <span>{report.business_name ? 'Verified Commercial Entity' : (report.public_name && !report.public_name.includes('Private Subscriber') ? 'Verified Public Identity (Open Web)' : 'Protected Subscriber (DPDP Act 2023)')}</span>
                 </span>
               </div>
 
@@ -278,7 +319,117 @@ export const NumberDossierPage: React.FC = () => {
       </div>
 
       {/* =========================================================================
-          SECTION 2: TRUECALLER LIVE GATEWAY CARD
+          SECTION 2: FREE OPEN INTERNET OSINT RECONNAISSANCE CARD (100% FREE & AUTOMATIC)
+         ========================================================================= */}
+      <div className="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-950 border border-emerald-800/60 rounded-2xl p-5 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-emerald-900/40">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-emerald-600 rounded-xl text-white shadow-lg shadow-emerald-950/50">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-base font-bold text-white tracking-tight">Free Open Internet OSINT Engine</h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950 text-emerald-300 border border-emerald-700 flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>100% FREE • NO LOGIN / NO OTP REQUIRED</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Automatically scans live search engine indices, Tellows anti-spam registry, open directory listings, and avatar resolvers.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleRunFreeOsint}
+              disabled={osintLoading}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold rounded-xl shadow-lg shadow-emerald-950/50 transition-all flex items-center space-x-1.5"
+            >
+              {osintLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+              <span>{osintLoading ? 'Scanning Internet...' : 'Re-scan Free Internet'}</span>
+            </button>
+            <a
+              href={`https://www.tellows.in/num/${cleanDigits}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-mono rounded-xl transition-colors flex items-center space-x-1"
+            >
+              <span>Tellows Registry</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <a
+              href={`https://www.google.com/search?q=%22${cleanDigits}%22`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-mono rounded-xl transition-colors flex items-center space-x-1"
+            >
+              <span>Google Dork</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+
+        {osintMessage && (
+          <div className="p-3 bg-slate-950/90 border border-emerald-900/60 rounded-xl text-xs font-mono text-emerald-300 flex items-center justify-between">
+            <span>{osintMessage}</span>
+          </div>
+        )}
+
+        {/* Free OSINT Sources Pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-slate-400">
+          <span className="text-slate-500">Live Active Feeds:</span>
+          <span className="px-2 py-0.5 bg-slate-950 text-cyan-300 border border-slate-800 rounded">DuckDuckGo Web Index</span>
+          <span className="px-2 py-0.5 bg-slate-950 text-cyan-300 border border-slate-800 rounded">Tellows Anti-Spam</span>
+          <span className="px-2 py-0.5 bg-slate-950 text-cyan-300 border border-slate-800 rounded">TRAI / DoT Telecom Series</span>
+          <span className="px-2 py-0.5 bg-slate-950 text-cyan-300 border border-slate-800 rounded">Unavatar Profile CDN</span>
+        </div>
+      </div>
+
+      {/* Discovered Open Web Footprint & Snippets */}
+      {report.web_snippets && report.web_snippets.length > 0 && (
+        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center space-x-2">
+              <Search className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-sm font-bold text-white">Discovered Open Web Mentions ({report.web_snippets.length} Hits)</h3>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/70 border border-emerald-800 px-2 py-0.5 rounded">
+              Search Engine Indexed Public Pages
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {report.web_snippets.map((snip, idx) => (
+              <div key={idx} className="p-3.5 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-2 hover:border-slate-700 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <a
+                    href={snip.url || `https://www.google.com/search?q=%22${cleanDigits}%22`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:underline line-clamp-1 flex items-center space-x-1"
+                  >
+                    <span>{snip.title}</span>
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                  </a>
+                </div>
+                <p className="text-xs text-slate-300 font-sans leading-relaxed line-clamp-3">
+                  {snip.snippet}
+                </p>
+                {snip.url && (
+                  <div className="text-[10px] font-mono text-slate-500 truncate">
+                    {snip.url}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          SECTION 3: TRUECALLER LIVE GATEWAY CARD (OPTIONAL AUTHENTICATED)
          ========================================================================= */}
       <div className="bg-gradient-to-r from-blue-950/70 via-slate-900 to-slate-950 border border-blue-800/60 rounded-2xl p-5 shadow-xl space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-blue-900/40">

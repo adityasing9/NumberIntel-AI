@@ -57,6 +57,32 @@ export const NewInvestigationPage: React.FC = () => {
       </div>
 
       {/* Truecaller Gateway Status Bar */}
+      {/* Free Internet OSINT Engine Banner */}
+      <div className="p-3.5 bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border border-emerald-900/50 rounded-2xl flex items-center justify-between text-xs font-mono">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-1.5 bg-emerald-600 rounded-lg text-white">
+            <Globe className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-white font-bold flex items-center space-x-1.5">
+              <span>Free Open Internet OSINT Engine</span>
+              <span className="text-[10px] text-emerald-400 flex items-center space-x-1 font-semibold">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>100% FREE ACTIVE</span>
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-400">
+              Scans open web search indices, Tellows anti-spam registry, TRAI/ITU grids, and public directories automatically without requiring logins or OTP.
+            </div>
+          </div>
+        </div>
+
+        <span className="hidden sm:inline-block px-2.5 py-1 bg-emerald-950/80 border border-emerald-800 text-emerald-300 rounded-lg text-[10px] font-semibold">
+          Auto-Harvest Enabled
+        </span>
+      </div>
+
+      {/* Truecaller Gateway (Optional) */}
       <div className="p-3.5 bg-gradient-to-r from-blue-950/70 via-slate-900 to-slate-900 border border-blue-900/50 rounded-2xl flex items-center justify-between text-xs font-mono">
         <div className="flex items-center space-x-2.5">
           <div className="p-1.5 bg-blue-600 rounded-lg text-white">
