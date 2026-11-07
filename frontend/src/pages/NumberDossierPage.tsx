@@ -159,6 +159,49 @@ export const NumberDossierPage: React.FC = () => {
       if (freeData) {
         setReport((prev) => {
           if (!prev) return prev;
+          const updatedPlatforms = [...prev.platforms];
+          const waIndex = updatedPlatforms.findIndex((p) => p.platform_name === 'whatsapp');
+          if (waIndex >= 0) {
+            if (freeData.whatsappVerified) {
+              updatedPlatforms[waIndex] = {
+                ...updatedPlatforms[waIndex],
+                verification_status: 'verified_association',
+                confidence_level: freeData.whatsappConfidence || 90,
+                public_profiles: freeData.whatsappAvatar ? [{
+                  id: 'prof-wa-osint',
+                  profile_identifier: prev.e164_format,
+                  avatar_url: freeData.whatsappAvatar,
+                  bio: freeData.name || 'Verified WhatsApp Profile',
+                  has_verified_badge: true
+                }] : updatedPlatforms[waIndex].public_profiles
+              };
+            } else {
+              updatedPlatforms[waIndex] = {
+                ...updatedPlatforms[waIndex],
+                verification_status: 'not_found',
+                confidence_level: 0,
+                public_profiles: []
+              };
+            }
+          }
+
+          const tgIndex = updatedPlatforms.findIndex((p) => p.platform_name === 'telegram');
+          if (tgIndex >= 0 && freeData.telegramVerified) {
+            updatedPlatforms[tgIndex] = {
+              ...updatedPlatforms[tgIndex],
+              verification_status: 'verified_association',
+              confidence_level: freeData.telegramConfidence || 85,
+              public_profiles: freeData.telegramAvatar ? [{
+                id: 'prof-tg-osint',
+                profile_identifier: freeData.telegramAvatar,
+                avatar_url: freeData.telegramAvatar,
+                has_verified_badge: false
+              }] : updatedPlatforms[tgIndex].public_profiles
+            };
+          }
+
+          const hasName = !!(freeData.name || freeData.businessName);
+
           return {
             ...prev,
             public_name: freeData.name || prev.public_name,
@@ -167,13 +210,15 @@ export const NumberDossierPage: React.FC = () => {
             carrier_circle: freeData.circle || prev.carrier_circle,
             city: freeData.circle || prev.city,
             avatar_url: freeData.avatarUrl || prev.avatar_url,
+            confidence_score: hasName ? Math.max(prev.confidence_score, 88) : prev.confidence_score,
             photo_sources: freeData.photoSources && freeData.photoSources.length > 0
               ? [...freeData.photoSources, ...(prev.photo_sources || [])]
               : prev.photo_sources,
             web_snippets: freeData.webSnippets || prev.web_snippets,
             free_osint_sources: freeData.sources || prev.free_osint_sources,
             summary: freeData.summary || prev.summary,
-            overall_verification_status: freeData.name || freeData.businessName ? 'verified' : prev.overall_verification_status,
+            platforms: updatedPlatforms,
+            overall_verification_status: hasName ? 'verified' : prev.overall_verification_status,
           };
         });
         setOsintMessage(`✓ Free Internet Recon complete! Found ${freeData.webSnippets?.length || 0} web mentions across ${freeData.sources?.length || 1} public sources.`);

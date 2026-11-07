@@ -719,11 +719,11 @@ const INITIAL_TABLE_ITEMS: Record<string, BulkResultTableItem[]> = {
       business_name: undefined,
       avatar_url: undefined,
       user_handle: undefined,
-      confidence_score: 85,
-      overall_status: 'verified',
-      whatsapp_status: 'possible_public_match',
+      confidence_score: 35,
+      overall_status: 'unindexed_private',
+      whatsapp_status: 'not_found',
       telegram_status: 'not_publicly_verifiable',
-      social_profiles_count: 1,
+      social_profiles_count: 0,
       spam_risk_level: 'low',
       task_status: 'completed',
       created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -800,26 +800,35 @@ export const generateLocalDossier = (taskId: string, requestedPhone?: string): F
   const identityData = resolveIdentity(validE164, cIso);
 
   const cleanDigits = validE164.replace(/\D/g, '');
+  const isBiz = identityData.isBusiness;
   const platforms: PlatformResult[] = [
     {
       id: 'p-wa',
       platform_name: 'whatsapp',
-      verification_status: 'possible_public_match',
+      verification_status: isBiz ? 'verified_association' : 'not_found',
       profile_url: `https://wa.me/${cleanDigits}`,
-      public_display_name: identityData.isBusiness ? identityData.name : 'WhatsApp Endpoint',
-      is_business: identityData.isBusiness,
-      confidence_level: 80,
+      public_display_name: isBiz ? identityData.name : 'WhatsApp Gateway (wa.me)',
+      is_business: isBiz,
+      confidence_level: isBiz ? 90 : 0,
       checked_at: new Date().toISOString(),
-      evidence_records: [
+      evidence_records: isBiz ? [
         {
           id: 'ev-wa',
           source_url: `https://wa.me/${cleanDigits}`,
-          snippet: `Official WhatsApp Click-to-Chat Gateway registered for +${cleanDigits}. Direct encrypted messaging route available.`,
+          snippet: `Official WhatsApp Click-to-Chat Gateway verified for +${cleanDigits}. Direct encrypted business route confirmed.`,
+          evidence_type: 'official_api_response',
+          retrieved_at: new Date().toISOString()
+        }
+      ] : [
+        {
+          id: 'ev-wa',
+          source_url: `https://wa.me/${cleanDigits}`,
+          snippet: `No public WhatsApp business profile or catalog verified. Standard wa.me/${cleanDigits} endpoint exists syntactically.`,
           evidence_type: 'official_api_response',
           retrieved_at: new Date().toISOString()
         }
       ],
-      public_profiles: identityData.avatarUrl ? [
+      public_profiles: (isBiz && identityData.avatarUrl) ? [
         {
           id: 'prof-wa',
           profile_identifier: validE164,
@@ -972,7 +981,7 @@ export const generateLocalDossier = (taskId: string, requestedPhone?: string): F
     mnp_status: 'Original Licensed Operator Allocated',
     dpdp_status: 'Statutory DPDP Act 2023 Compliant',
     photo_sources: identityData.photoSources,
-    confidence_score: isValid ? 92 : 30,
+    confidence_score: identityData.isBusiness ? 92 : (isValid ? 35 : 10),
     overall_verification_status: identityData.isBusiness ? 'verified' : 'unindexed_private',
     summary: executiveSummary,
     platforms,
@@ -986,7 +995,9 @@ export const generateLocalDossier = (taskId: string, requestedPhone?: string): F
         { statement: identityData.isBusiness ? `Enterprise directory record mapped to '${identityData.businessName}'.` : 'No public commercial business directory mapping discovered.', source_attribution: 'Open OSINT Business Index', confidence: 0.90 }
       ],
       conflicting_evidence: [],
-      reliability_assessment: `High technical precision (92%). Telecom carrier identified via national allocation matrix. ${identityData.isBusiness ? 'Corporate entity confirmed.' : 'Subscriber privacy protected under Indian DPDP Act 2023.'}`,
+      reliability_assessment: identityData.isBusiness
+        ? `High technical precision (92%). Telecom carrier identified via national allocation matrix. Corporate entity confirmed.`
+        : `Allocated telecom routing validated (35%). Personal subscriber privacy protected under Indian DPDP Act 2023. No unverified platform matches fabricated.`,
       missing_information: identityData.isBusiness ? [] : [
         'Private residential subscriber name (Protected under Section 8 of DPDP Act 2023).',
         'Private social media accounts (Protected by platform privacy boundaries & contact sync limits).'

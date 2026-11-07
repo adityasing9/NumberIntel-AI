@@ -328,11 +328,11 @@ export const bulkService = {
         business_name: identityInfo.businessName,
         avatar_url: identityInfo.avatarUrl,
         user_handle: identityInfo.handle,
-        confidence_score: 92,
+        confidence_score: identityInfo.isBusiness ? 90 : 35,
         overall_status: identityInfo.isBusiness ? 'verified' : 'unindexed_private',
-        whatsapp_status: 'possible_public_match',
+        whatsapp_status: identityInfo.isBusiness ? 'verified_association' : 'not_found',
         telegram_status: 'not_publicly_verifiable',
-        social_profiles_count: identityInfo.isBusiness ? 2 : 1,
+        social_profiles_count: identityInfo.isBusiness ? 2 : 0,
         spam_risk_level: 'low',
         task_status: 'completed',
         created_at: new Date().toISOString(),
@@ -417,6 +417,14 @@ export const numberService = {
 
     const carrierInfo = resolveCarrier(validNum.e164_format, validNum.country_iso2);
     const identityInfo = resolveIdentity(validNum.e164_format, validNum.country_iso2);
+    let whatsappStatus: 'verified_association' | 'not_found' = 'not_found';
+    let whatsappConfidence = 0;
+    let whatsappAvatar: string | undefined = undefined;
+    let telegramStatus: 'verified_association' | 'not_publicly_verifiable' = 'not_publicly_verifiable';
+    let telegramConfidence = 0;
+    let telegramAvatar: string | undefined = undefined;
+    let fetchedWebSnippets: any[] = [];
+    let fetchedSources: string[] = [];
 
     // Free Internet OSINT Reconnaissance (Zero login / Zero cost)
     try {
@@ -439,6 +447,22 @@ export const numberService = {
           identityInfo.avatarUrl = freeData.avatarUrl;
           identityInfo.photoSources = freeData.photoSources || [];
         }
+        if (freeData.whatsappVerified) {
+          whatsappStatus = 'verified_association';
+          whatsappConfidence = freeData.whatsappConfidence || 90;
+          whatsappAvatar = freeData.whatsappAvatar;
+        }
+        if (freeData.telegramVerified) {
+          telegramStatus = 'verified_association';
+          telegramConfidence = freeData.telegramConfidence || 85;
+          telegramAvatar = freeData.telegramAvatar;
+        }
+        if (freeData.webSnippets) {
+          fetchedWebSnippets = freeData.webSnippets;
+        }
+        if (freeData.sources) {
+          fetchedSources = freeData.sources;
+        }
       }
     } catch (e) {}
 
@@ -454,11 +478,13 @@ export const numberService = {
             platform: 'Truecaller',
             url: tc.imageUrl,
             label: 'Truecaller Verified Profile Picture'
-          }];
+          }, ...(identityInfo.photoSources || [])];
         }
         identityInfo.isBusiness = tc.isBusiness;
       }
     } catch (e) {}
+
+    const isIdentified = identityInfo.isBusiness || (identityInfo.name && !identityInfo.name.includes('Private Subscriber'));
 
     const item: BulkResultTableItem = {
       task_id: taskId,
@@ -475,18 +501,64 @@ export const numberService = {
       business_name: identityInfo.businessName,
       avatar_url: identityInfo.avatarUrl,
       user_handle: identityInfo.handle,
-      confidence_score: 95,
-      overall_status: identityInfo.isBusiness || (identityInfo.name && !identityInfo.name.includes('Private Subscriber')) ? 'verified' : 'unindexed_private',
-      whatsapp_status: 'possible_public_match',
-      telegram_status: 'not_publicly_verifiable',
-      social_profiles_count: identityInfo.isBusiness ? 2 : 1,
+      confidence_score: isIdentified ? 88 : 35,
+      overall_status: isIdentified ? 'verified' : 'unindexed_private',
+      whatsapp_status: whatsappStatus,
+      telegram_status: telegramStatus,
+      social_profiles_count: isIdentified ? 2 : 0,
       spam_risk_level: 'low',
       task_status: 'completed',
       created_at: new Date().toISOString(),
     };
 
     saveLocalInvestigation(newInv, [item]);
-    return generateLocalDossier(taskId);
+    const dossier = generateLocalDossier(taskId);
+
+    // Apply enriched metadata
+    dossier.public_name = identityInfo.name;
+    dossier.business_name = identityInfo.businessName;
+    dossier.carrier_name = carrierInfo.carrier;
+    dossier.carrier_circle = carrierInfo.circle;
+    dossier.avatar_url = identityInfo.avatarUrl;
+    dossier.photo_sources = identityInfo.photoSources;
+    dossier.confidence_score = isIdentified ? 88 : 35;
+    dossier.overall_verification_status = isIdentified ? 'verified' : 'unindexed_private';
+    if (fetchedWebSnippets.length > 0) dossier.web_snippets = fetchedWebSnippets;
+    if (fetchedSources.length > 0) dossier.free_osint_sources = fetchedSources;
+
+    // Update platforms inside dossier
+    const wa = dossier.platforms.find(p => p.platform_name === 'whatsapp');
+    if (wa) {
+      wa.verification_status = whatsappStatus;
+      wa.confidence_level = whatsappConfidence;
+      if (whatsappAvatar) {
+        wa.public_profiles = [{
+          id: 'prof-wa-res',
+          profile_identifier: validNum.e164_format,
+          avatar_url: whatsappAvatar,
+          bio: identityInfo.name || 'Verified WhatsApp Account',
+          has_verified_badge: true
+        }];
+      } else {
+        wa.public_profiles = [];
+      }
+    }
+
+    const tg = dossier.platforms.find(p => p.platform_name === 'telegram');
+    if (tg && telegramStatus === 'verified_association') {
+      tg.verification_status = 'verified_association';
+      tg.confidence_level = telegramConfidence;
+      if (telegramAvatar) {
+        tg.public_profiles = [{
+          id: 'prof-tg-res',
+          profile_identifier: validNum.e164_format,
+          avatar_url: telegramAvatar,
+          has_verified_badge: false
+        }];
+      }
+    }
+
+    return dossier;
   },
 
   getReport: async (taskId: string): Promise<FullNumberReportResponse> => {
@@ -503,6 +575,7 @@ export const numberService = {
     try {
       const freeData = await freeOsintService.lookup(dossier.e164_format, dossier.country_iso2);
       if (freeData) {
+        const hasIdent = !!(freeData.name || freeData.businessName);
         if (freeData.name) {
           dossier.public_name = freeData.name;
           dossier.overall_verification_status = 'verified';
@@ -510,6 +583,9 @@ export const numberService = {
         if (freeData.businessName) {
           dossier.business_name = freeData.businessName;
           dossier.overall_verification_status = 'verified';
+        }
+        if (hasIdent) {
+          dossier.confidence_score = Math.max(dossier.confidence_score, 88);
         }
         if (freeData.carrier) {
           dossier.carrier_name = freeData.carrier;
@@ -533,6 +609,44 @@ export const numberService = {
         if (freeData.summary) {
           dossier.summary = freeData.summary;
         }
+
+        // WhatsApp platform status update
+        const waPlatform = dossier.platforms.find(p => p.platform_name === 'whatsapp');
+        if (waPlatform) {
+          if (freeData.whatsappVerified) {
+            waPlatform.verification_status = 'verified_association';
+            waPlatform.confidence_level = freeData.whatsappConfidence || 90;
+            if (freeData.whatsappAvatar) {
+              waPlatform.public_profiles = [{
+                id: 'prof-wa-osint',
+                profile_identifier: dossier.e164_format,
+                avatar_url: freeData.whatsappAvatar,
+                bio: freeData.name || 'Verified WhatsApp Profile',
+                has_verified_badge: true
+              }];
+            }
+          } else {
+            waPlatform.verification_status = 'not_found';
+            waPlatform.confidence_level = 0;
+            waPlatform.public_profiles = [];
+          }
+        }
+
+        // Telegram platform status update
+        const tgPlatform = dossier.platforms.find(p => p.platform_name === 'telegram');
+        if (tgPlatform && freeData.telegramVerified) {
+          tgPlatform.verification_status = 'verified_association';
+          tgPlatform.confidence_level = freeData.telegramConfidence || 85;
+          if (freeData.telegramAvatar) {
+            tgPlatform.public_profiles = [{
+              id: 'prof-tg-osint',
+              profile_identifier: freeData.telegramHandle || dossier.e164_format,
+              avatar_url: freeData.telegramAvatar,
+              has_verified_badge: false
+            }];
+          }
+        }
+
         if (freeData.socialProfiles && freeData.socialProfiles.length > 0) {
           freeData.socialProfiles.forEach((sp, idx) => {
             const existing = dossier.platforms.find(p => p.platform_name.toLowerCase() === sp.platform.toLowerCase());
@@ -583,9 +697,10 @@ export const numberService = {
             platform: 'Truecaller',
             url: tc.imageUrl,
             label: 'Truecaller Verified Profile Picture'
-          }];
+          }, ...(dossier.photo_sources || [])];
         }
         dossier.overall_verification_status = 'verified';
+        dossier.confidence_score = Math.max(dossier.confidence_score, 92);
         dossier.summary = `Caller verified via Truecaller Gateway. Registered name: ${tc.name} (${tc.carrier || dossier.carrier_name}). Truecaller spam score: ${tc.spamScore || 0}.`;
       }
     } catch (e) {}

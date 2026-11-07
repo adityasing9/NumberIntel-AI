@@ -21,6 +21,15 @@ export interface FreeOsintResult {
   webSnippets: Array<{ title: string; snippet: string; url: string }>;
   sources: string[];
   summary: string;
+  whatsappVerified?: boolean;
+  whatsappStatus?: string;
+  whatsappConfidence?: number;
+  whatsappAvatar?: string;
+  telegramVerified?: boolean;
+  telegramStatus?: string;
+  telegramConfidence?: number;
+  telegramAvatar?: string;
+  telegramHandle?: string;
 }
 
 export const freeOsintService = {
@@ -60,6 +69,15 @@ export const freeOsintService = {
           webSnippets: d.web_snippets || [],
           sources: d.sources || ['Open Web Search Index'],
           summary: d.summary || '',
+          whatsappVerified: !!d.whatsapp_verified,
+          whatsappStatus: d.whatsapp_status || 'not_found',
+          whatsappConfidence: d.whatsapp_confidence || 0,
+          whatsappAvatar: d.whatsapp_avatar || undefined,
+          telegramVerified: !!d.telegram_verified,
+          telegramStatus: d.telegram_status || 'not_found',
+          telegramConfidence: d.telegram_confidence || 0,
+          telegramAvatar: d.telegram_avatar || undefined,
+          telegramHandle: d.telegram_handle || undefined,
         };
       }
     } catch (err) {
@@ -84,6 +102,12 @@ export const freeOsintService = {
       spamRiskLevel: 'low',
       spamReportsCount: 0,
       spamCategories: [],
+      whatsappVerified: false,
+      whatsappStatus: 'not_found',
+      whatsappConfidence: 0,
+      telegramVerified: false,
+      telegramStatus: 'not_publicly_verifiable',
+      telegramConfidence: 0,
       socialProfiles: [
         {
           platform: 'WhatsApp',
