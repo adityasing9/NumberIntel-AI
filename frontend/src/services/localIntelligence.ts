@@ -732,15 +732,23 @@ const INITIAL_TABLE_ITEMS: Record<string, BulkResultTableItem[]> = {
 };
 
 export const getLocalInvestigations = (): Investigation[] => {
+  const isCleared = localStorage.getItem('numberintel_cleared') === 'true';
   const saved = localStorage.getItem('numberintel_local_invs');
   if (saved) {
-    try { return JSON.parse(saved); } catch (e) {}
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  if (isCleared) {
+    return [];
   }
   localStorage.setItem('numberintel_local_invs', JSON.stringify(INITIAL_INVESTIGATIONS));
   return INITIAL_INVESTIGATIONS;
 };
 
 export const saveLocalInvestigation = (inv: Investigation, items: BulkResultTableItem[]): void => {
+  localStorage.removeItem('numberintel_cleared');
   const current = getLocalInvestigations();
   current.unshift(inv);
   localStorage.setItem('numberintel_local_invs', JSON.stringify(current));
@@ -751,12 +759,31 @@ export const saveLocalInvestigation = (inv: Investigation, items: BulkResultTabl
 };
 
 export const getLocalTableItems = (): Record<string, BulkResultTableItem[]> => {
+  const isCleared = localStorage.getItem('numberintel_cleared') === 'true';
   const saved = localStorage.getItem('numberintel_local_items');
   if (saved) {
-    try { return JSON.parse(saved); } catch (e) {}
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (e) {}
+  }
+  if (isCleared) {
+    return {};
   }
   localStorage.setItem('numberintel_local_items', JSON.stringify(INITIAL_TABLE_ITEMS));
   return INITIAL_TABLE_ITEMS;
+};
+
+export const clearAllLocalData = (includeAuth = false): void => {
+  localStorage.setItem('numberintel_cleared', 'true');
+  localStorage.setItem('numberintel_local_invs', JSON.stringify([]));
+  localStorage.setItem('numberintel_local_items', JSON.stringify({}));
+  localStorage.removeItem('numberintel_tc_token');
+  if (includeAuth) {
+    localStorage.removeItem('numberintel_token');
+    localStorage.removeItem('numberintel_user');
+    localStorage.removeItem('numberintel_registered_users');
+  }
 };
 
 // ============================================================================
@@ -1029,11 +1056,11 @@ export const getLocalDashboardAnalytics = (): DashboardAnalytics => {
 
   return {
     metrics: {
-      total_numbers_processed: Math.max(12, totalProcessed),
-      verified_public_matches: Math.max(5, verifiedMatches),
-      possible_profile_matches: Math.max(4, possibleMatches),
-      spam_associated_numbers: Math.max(1, spamCount),
-      business_numbers_identified: Math.max(4, businessCount),
+      total_numbers_processed: totalProcessed,
+      verified_public_matches: verifiedMatches,
+      possible_profile_matches: possibleMatches,
+      spam_associated_numbers: spamCount,
+      business_numbers_identified: businessCount,
       failed_lookups: 0
     },
     timeline: [

@@ -19,7 +19,8 @@ import {
   getLocalDashboardAnalytics,
   parseLocalPhones,
   resolveCarrier,
-  resolveIdentity
+  resolveIdentity,
+  clearAllLocalData
 } from './localIntelligence';
 import { truecallerService } from './truecallerService';
 import { freeOsintService } from './freeOsintService';
@@ -241,8 +242,14 @@ export const investigationService = {
     try {
       await api.delete('/investigations/all');
     } catch (err) {}
-    localStorage.setItem('numberintel_local_invs', JSON.stringify([]));
-    localStorage.setItem('numberintel_local_items', JSON.stringify({}));
+    clearAllLocalData(false);
+  },
+
+  clearAllData: async (includeAuth = false): Promise<void> => {
+    try {
+      await api.delete('/investigations/all');
+    } catch (err) {}
+    clearAllLocalData(includeAuth);
   },
 
   export: (id: string, format: 'csv' | 'xlsx' | 'json'): string => {

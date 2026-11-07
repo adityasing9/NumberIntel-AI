@@ -59,6 +59,18 @@ def get_investigation(
     return inv
 
 
+@router.delete("/all")
+def delete_all_investigations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    invs = db.query(Investigation).filter(Investigation.user_id == current_user.id).all()
+    for inv in invs:
+        db.delete(inv)
+    db.commit()
+    return {"message": "All investigations deleted successfully", "deleted_count": len(invs)}
+
+
 @router.delete("/{investigation_id}")
 def delete_investigation(
     investigation_id: str,

@@ -73,15 +73,20 @@ export const InvestigationsPage: React.FC = () => {
     }
   };
 
-  const handleClearAllHistory = async () => {
+  const handleClearAllHistory = async (factoryReset = false) => {
     setIsDeleting(true);
     try {
-      await investigationService.deleteAll();
-      setInvestigations([]);
-      setSelectedIds([]);
-      setIsClearAllModalOpen(false);
+      if (factoryReset) {
+        await investigationService.clearAllData(true);
+        window.location.href = '/login';
+      } else {
+        await investigationService.deleteAll();
+        setInvestigations([]);
+        setSelectedIds([]);
+        setIsClearAllModalOpen(false);
+      }
     } catch (err) {
-      alert('Failed to clear investigation history.');
+      alert('Failed to clear investigation data.');
     } finally {
       setIsDeleting(false);
     }
@@ -132,15 +137,14 @@ export const InvestigationsPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {investigations.length > 0 && (
-            <button
-              onClick={() => setIsClearAllModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-xs font-mono font-bold flex items-center space-x-1.5 transition-all"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-              <span>Clear All History</span>
-            </button>
-          )}
+          <button
+            onClick={() => setIsClearAllModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-xs font-mono font-bold flex items-center space-x-1.5 transition-all shadow-sm"
+            title="Clear Data & Search History"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+            <span>Clear All Data</span>
+          </button>
 
           <button
             onClick={fetchInvestigations}
@@ -396,14 +400,14 @@ export const InvestigationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* CLEAR ALL HISTORY CONFIRMATION MODAL */}
+      {/* CLEAR ALL DATA CONFIRMATION MODAL */}
       {isClearAllModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="glass-panel border border-rose-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center space-x-2.5 text-rose-400">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <h3 className="text-base font-bold text-white">Clear Entire Investigation History</h3>
+                <Trash2 className="w-5 h-5 shrink-0" />
+                <h3 className="text-base font-bold text-white">Clear Workspace Data & History</h3>
               </div>
               <button
                 onClick={() => setIsClearAllModalOpen(false)}
@@ -414,29 +418,58 @@ export const InvestigationsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-300 font-sans leading-relaxed">
-              This action will permanently delete all <strong className="text-rose-300">{investigations.length} recorded investigation dossier(s)</strong>, audit trails, and compiled phone records from local repository memory.
+              Select which workspace data to purge. In accordance with the Indian DPDP Act 2023, you have the statutory right to erase stored intelligence records at any time.
             </p>
 
-            <div className="p-3 bg-rose-950/40 border border-rose-900/50 rounded-xl text-[11px] font-mono text-rose-300">
-              ⚠️ Warning: This operation cannot be undone. All exported results should be downloaded prior to clearing.
+            <div className="space-y-3 pt-1">
+              {/* Option 1: Clear History Only */}
+              <button
+                type="button"
+                onClick={() => handleClearAllHistory(false)}
+                disabled={isDeleting}
+                className="w-full text-left p-3.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 transition-all flex items-start space-x-3 group"
+              >
+                <div className="p-2 rounded-lg bg-rose-500/20 text-rose-400 group-hover:scale-105 transition-transform">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">
+                    Clear Investigation History ({investigations.length} cases)
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">
+                    Deletes all investigation dossiers and compiled phone records. Keeps your login and preferences.
+                  </div>
+                </div>
+              </button>
+
+              {/* Option 2: Factory Reset */}
+              <button
+                type="button"
+                onClick={() => handleClearAllHistory(true)}
+                disabled={isDeleting}
+                className="w-full text-left p-3.5 rounded-xl bg-red-950/60 hover:bg-red-900/70 border border-red-700/70 transition-all flex items-start space-x-3 group"
+              >
+                <div className="p-2 rounded-lg bg-red-500/30 text-rose-300 group-hover:scale-105 transition-transform">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-rose-200">
+                    Factory Reset (Clear All Data)
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">
+                    Wipes all dossiers, Truecaller API keys, local accounts, and session tokens.
+                  </div>
+                </div>
+              </button>
             </div>
 
-            <div className="flex items-center justify-end space-x-3 pt-2">
+            <div className="flex items-center justify-end pt-2">
               <button
                 type="button"
                 onClick={() => setIsClearAllModalOpen(false)}
                 className="px-4 py-2 glass-button text-slate-300 hover:text-white rounded-xl text-xs font-mono"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleClearAllHistory}
-                disabled={isDeleting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-mono font-bold shadow-lg shadow-rose-950/60 flex items-center space-x-1.5"
-              >
-                {isDeleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                <span>Yes, Delete All History</span>
               </button>
             </div>
           </div>
